@@ -3,7 +3,9 @@ import {
     FaQuestionCircle,
     FaClipboardList,
     FaUsers,
-    FaFilePdf
+    FaFilePdf,
+    FaBook,
+    FaGraduationCap
 } from "react-icons/fa";
 
 import { useNavigate } from "react-router-dom";
@@ -34,7 +36,7 @@ function QuickActions({
 
                     {/* Add Question */}
 
-                    <div className="col-md-6 col-lg-4">
+                    <div className="col-md-6 col-lg-3">
 
                         <button
                             className="btn btn-primary w-100 py-4"
@@ -60,7 +62,7 @@ function QuickActions({
 
                     {/* Manage Questions */}
 
-                    <div className="col-md-6 col-lg-4">
+                    <div className="col-md-6 col-lg-3">
 
                         <button
                             className="btn btn-success w-100 py-4"
@@ -86,7 +88,7 @@ function QuickActions({
 
                     {/* Manage Mock Tests */}
 
-                    <div className="col-md-6 col-lg-4">
+                    <div className="col-md-6 col-lg-3">
 
                         <button
                             className="btn btn-warning w-100 py-4"
@@ -110,9 +112,9 @@ function QuickActions({
 
                     </div>
 
-                    {/* Manage Previous Year Papers */}
+                    {/* Manage Papers */}
 
-                    <div className="col-md-6 col-lg-6">
+                    <div className="col-md-6 col-lg-3">
 
                         <button
                             className="btn btn-info w-100 py-4 text-white"
@@ -136,9 +138,61 @@ function QuickActions({
 
                     </div>
 
+                    {/* Manage Subjects */}
+
+                    <div className="col-md-6 col-lg-4">
+
+                        <button
+                            className="btn btn-secondary w-100 py-4"
+                            onClick={() => navigate("/admin/subjects")}
+                        >
+
+                            <FaBook
+                                size={28}
+                                className="mb-2"
+                            />
+
+                            <br />
+
+                            <strong>
+
+                                Manage Subjects
+
+                            </strong>
+
+                        </button>
+
+                    </div>
+
+                    {/* Manage Exams */}
+
+                    <div className="col-md-6 col-lg-4">
+
+                        <button
+                            className="btn btn-dark w-100 py-4"
+                            onClick={() => navigate("/admin/exams")}
+                        >
+
+                            <FaGraduationCap
+                                size={28}
+                                className="mb-2"
+                            />
+
+                            <br />
+
+                            <strong>
+
+                                Manage Exams
+
+                            </strong>
+
+                        </button>
+
+                    </div>
+
                     {/* View Users */}
 
-                    <div className="col-md-6 col-lg-6">
+                    <div className="col-md-6 col-lg-4">
 
                         <button
                             className="btn btn-danger w-100 py-4"

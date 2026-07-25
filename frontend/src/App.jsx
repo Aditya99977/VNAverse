@@ -24,6 +24,7 @@ const Performance = lazy(() => import("./pages/Performance"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const MockTestManagement = lazy(() => import("./pages/MockTestManagement"));
 const PaperManagement = lazy(() => import("./pages/PaperManagement"));
+const SubjectManagement = lazy(() => import("./pages/SubjectManagement"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -32,17 +33,25 @@ function App() {
     return (
         <Suspense fallback={<Loader />}>
             <Routes>
-                {/* Public Routes */}
+
+                {/* ===============================
+                    Public Routes
+                =============================== */}
+
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
+
                 <Route
                     path="/verify-email/:token"
                     element={<VerifyEmail />}
                 />
 
-                {/* Student Onboarding */}
+                {/* ===============================
+                    Student Onboarding
+                =============================== */}
+
                 <Route
                     path="/select-exam"
                     element={
@@ -52,7 +61,10 @@ function App() {
                     }
                 />
 
-                {/* Student Routes */}
+                {/* ===============================
+                    Student Routes
+                =============================== */}
+
                 <Route
                     path="/dashboard"
                     element={
@@ -116,7 +128,10 @@ function App() {
                     }
                 />
 
-                {/* Admin Routes */}
+                {/* ===============================
+                    Admin Routes
+                =============================== */}
+
                 <Route
                     path="/admin"
                     element={
@@ -144,8 +159,24 @@ function App() {
                     }
                 />
 
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
+                <Route
+                    path="/admin/subjects"
+                    element={
+                        <AdminRoute>
+                            <SubjectManagement />
+                        </AdminRoute>
+                    }
+                />
+
+                {/* ===============================
+                    404 Page
+                =============================== */}
+
+                <Route
+                    path="*"
+                    element={<NotFound />}
+                />
+
             </Routes>
         </Suspense>
     );

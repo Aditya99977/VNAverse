@@ -32,6 +32,7 @@ const adminRoutes = require("./routes/admin");
 const mockTestRoutes = require("./routes/MockTestRoute");
 const paperRoutes = require("./routes/paperRoutes");
 const examRoutes = require("./routes/examRoutes");
+const subjectRoutes = require("./routes/subjectRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -133,6 +134,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/mocktests", mockTestRoutes);
 app.use("/api/papers", paperRoutes);
 app.use("/api/exams", examRoutes);
+app.use("/api/subjects", subjectRoutes);
 
 // =============================================
 // Root Route
