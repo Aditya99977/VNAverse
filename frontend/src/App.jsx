@@ -26,6 +26,7 @@ const MockTestManagement = lazy(() => import("./pages/MockTestManagement"));
 const PaperManagement = lazy(() => import("./pages/PaperManagement"));
 const SubjectManagement = lazy(() => import("./pages/SubjectManagement"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const ManageExams = lazy(() => import("./pages/ManageExams"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -166,6 +167,14 @@ function App() {
                             <SubjectManagement />
                         </AdminRoute>
                     }
+                />
+                <Route
+                      path="/admin/exams"
+                       element={
+                           <AdminRoute>
+                            <ManageExams />
+                         </AdminRoute>
+                     }
                 />
 
                 {/* ===============================

@@ -10,199 +10,146 @@ import AuthButton from "../components/AuthButton";
 
 import {
     getProfile,
-    updateProfile
+    updateProfile,
 } from "../services/profileService";
 
-function EditProfile() {
+import { getAllExams } from "../services/examService";
 
+function EditProfile() {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
 
+    const [exams, setExams] = useState([]);
+
     const [formData, setFormData] = useState({
-
         name: "",
-
         email: "",
-
-        examTarget: ""
-
+        preferredExam: "",
     });
 
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [profile, examResponse] = await Promise.all([
+                    getProfile(),
+                    getAllExams(),
+                ]);
 
-        const fetchProfile = async () => {
+                setFormData({
+                    name: profile.name || "",
+                    email: profile.email || "",
+                    preferredExam: profile.preferredExam?._id || "",
+                });
 
-        try {
-
-            const data = await getProfile();
-
-            setFormData({
-
-                name: data.name,
-
-                email: data.email,
-
-                examTarget: data.examTarget
-
-            });
-
-        }
-
-        catch (err) {
-
-            console.log(err);
-
-            toast.error("Failed to load profile");
-
-        }
-
+                setExams(examResponse.exams || []);
+            } catch (err) {
+                console.error(err);
+                toast.error("Failed to load profile.");
+            }
         };
 
-        fetchProfile();
-
+        fetchData();
     }, []);
 
     const handleChange = (e) => {
-
         const { name, value } = e.target;
 
         setFormData((prev) => ({
-
             ...prev,
-
-            [name]: value
-
+            [name]: value,
         }));
-
     };
 
     const handleSubmit = async (e) => {
-
         e.preventDefault();
 
         try {
-
             setLoading(true);
 
             await updateProfile(formData);
 
-            toast.success("Profile Updated Successfully!");
+            toast.success("Profile updated successfully!");
 
             setTimeout(() => {
-
                 navigate("/profile", {
-
-                    replace: true
-
+                    replace: true,
                 });
-
             }, 1200);
-
-        }
-
-        catch (err) {
-
-            console.log(err);
+        } catch (err) {
+            console.error(err);
 
             toast.error(
-
                 err.response?.data?.message ||
-
-                "Failed to update profile."
-
+                    "Failed to update profile."
             );
-
-        }
-
-        finally {
-
+        } finally {
             setLoading(false);
-
         }
-
     };
 
     return (
-
         <AuthLayout>
-
             <ToastContainer position="top-right" />
 
             <AuthCard
-
                 title="Edit Profile"
-
                 subtitle="Update your account information"
-
             >
-
                 <form onSubmit={handleSubmit}>
-
                     <FormInput
-
                         label="Name"
-
                         name="name"
-
                         placeholder="Enter your name"
-
                         value={formData.name}
-
                         onChange={handleChange}
-
                         disabled={loading}
-
                     />
 
                     <FormInput
-
                         label="Email"
-
                         name="email"
-
                         placeholder="Enter your email"
-
                         value={formData.email}
-
                         onChange={handleChange}
-
                         disabled={loading}
-
                     />
 
-                    <FormInput
+                    <div className="mb-3">
+                        <label className="form-label fw-semibold">
+                            Preferred Exam
+                        </label>
 
-                        label="Target Exam"
+                        <select
+                            className="form-select"
+                            name="preferredExam"
+                            value={formData.preferredExam}
+                            onChange={handleChange}
+                            disabled={loading}
+                        >
+                            <option value="">
+                                Select Preferred Exam
+                            </option>
 
-                        name="examTarget"
-
-                        placeholder="SSC CGL / IBPS / UPSC"
-
-                        value={formData.examTarget}
-
-                        onChange={handleChange}
-
-                        disabled={loading}
-
-                    />
+                            {exams.map((exam) => (
+                                <option
+                                    key={exam._id}
+                                    value={exam._id}
+                                >
+                                    {exam.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
                     <AuthButton
-
                         text="Save Changes"
-
                         loading={loading}
-
                     />
-
                 </form>
-
             </AuthCard>
-
         </AuthLayout>
-
     );
-
 }
 
 export default EditProfile;
