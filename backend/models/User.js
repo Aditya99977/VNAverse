@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const aiPreferenceSchema = new mongoose.Schema(
     {
@@ -39,9 +40,13 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: [true, "Email is required."],
             unique: true,
-            lowercase: true,
             trim: true,
+            lowercase: true,
             index: true,
+            match: [
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                "Please enter a valid email address.",
+            ],
         },
 
         password: {
@@ -176,7 +181,58 @@ const userSchema = new mongoose.Schema(
     {
         timestamps: true,
         versionKey: false,
+
+        toJSON: {
+            virtuals: true,
+
+            transform(doc, ret) {
+                ret.id = ret._id;
+
+                delete ret._id;
+                delete ret.__v;
+                delete ret.password;
+                delete ret.verificationToken;
+                delete ret.verificationTokenExpires;
+                delete ret.passwordChangedAt;
+
+                return ret;
+            },
+        },
+
+        toObject: {
+            virtuals: true,
+        },
     }
 );
+
+// ==========================================
+// Normalize Email (Mongoose 9 Compatible)
+// ==========================================
+
+userSchema.pre("save", function () {
+    if (this.isModified("email") && typeof this.email === "string") {
+        this.email = this.email.trim().toLowerCase();
+    }
+});
+
+// ==========================================
+// Instance Methods
+// ==========================================
+
+userSchema.methods.comparePassword = async function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.isAdmin = function () {
+    return this.role === "admin";
+};
+
+// ==========================================
+// Indexes
+// ==========================================
+
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ preferredExam: 1, status: 1 });
+userSchema.index({ lastActive: -1 });
 
 module.exports = mongoose.model("User", userSchema);

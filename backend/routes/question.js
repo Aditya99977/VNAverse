@@ -2,45 +2,63 @@ const express = require("express");
 
 const router = express.Router();
 
-const auth = require("../middleware/authMiddleware");
-const admin = require("../middleware/adminMiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 
 const {
-
     addQuestion,
-
     getQuestions,
-
-    getRandomQuestions
-
+    getRandomQuestions,
 } = require("../controllers/questionController");
 
 /*
-Add Question
+=================================================
+Question Routes
+Base Route: /api/questions
+=================================================
+*/
+
+/*
+POST /
+Create Question
+(Admin Only)
 */
 
 router.post(
-
-    "/add",
-
-    auth,
-
-    admin,
-
+    "/",
+    authMiddleware,
+    adminMiddleware,
     addQuestion
-
 );
 
 /*
+GET /
 Get All Questions
+Supports:
+?exam=
+?subject=
+?difficulty=
 */
 
-router.get("/", getQuestions);
+router.get(
+    "/",
+    getQuestions
+);
 
 /*
-Get Random Questions
+GET /random
+Random Practice Questions
+
+Supports:
+?exam=
+?subject=
+?difficulty=
+?limit=
 */
 
-router.get("/random", getRandomQuestions);
+router.get(
+    "/random",
+    getRandomQuestions
+);
 
 module.exports = router;

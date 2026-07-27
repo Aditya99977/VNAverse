@@ -1,181 +1,102 @@
 import api from "./api";
 
 /*
-========================================
-Get Admin Dashboard
-========================================
+==================================================
+Dashboard
+==================================================
 */
 
 export const getAdminDashboard = async () => {
-
-    const response = await api.get("/admin/dashboard");
-
-    return response.data;
-
+    const { data } = await api.get("/admin/dashboard");
+    return data;
 };
 
 /*
-========================================
-Get All Users
-========================================
+==================================================
+Users
+==================================================
 */
 
 export const getAllUsers = async () => {
+    const { data } = await api.get("/admin/users");
+    return data;
+};
 
-    const response = await api.get("/admin/users");
+export const getUserDetails = async (userId) => {
+    const { data } = await api.get(`/admin/users/${userId}`);
+    return data;
+};
 
-    return response.data;
-
+export const deleteUser = async (userId) => {
+    const { data } = await api.delete(`/admin/users/${userId}`);
+    return data;
 };
 
 /*
-========================================
-Get User Details
-========================================
-*/
-
-export const getUserDetails = async (id) => {
-
-    const response = await api.get(
-
-        `/admin/users/${id}`
-
-    );
-
-    return response.data;
-
-};
-
-/*
-========================================
-Delete User
-========================================
-*/
-
-export const deleteUser = async (id) => {
-
-    const response = await api.delete(
-
-        `/admin/users/${id}`
-
-    );
-
-    return response.data;
-
-};
-
-/*
-========================================
-Get All Questions
-========================================
+==================================================
+Questions
+==================================================
 */
 
 export const getAllQuestions = async () => {
-
-    const response = await api.get("/admin/questions");
-
-    return response.data;
-
+    const { data } = await api.get("/admin/questions");
+    return data;
 };
 
-/*
-========================================
-Update Question
-========================================
-*/
+export const addQuestion = async (questionData) => {
+    const { data } = await api.post(
+        "/questions",
+        questionData
+    );
+
+    return data;
+};
 
 export const updateQuestion = async (
-
-    id,
-
+    questionId,
     questionData
-
 ) => {
-
-    const response = await api.put(
-
-        `/admin/question/${id}`,
-
+    const { data } = await api.put(
+        `/admin/question/${questionId}`,
         questionData
-
     );
 
-    return response.data;
+    return data;
+};
 
+export const deleteQuestion = async (questionId) => {
+    const { data } = await api.delete(
+        `/admin/question/${questionId}`
+    );
+
+    return data;
 };
 
 /*
-========================================
-Delete Question
-========================================
+==================================================
+CSV Upload
+==================================================
 */
 
-export const deleteQuestion = async (id) => {
-
-    const response = await api.delete(
-
-        `/admin/question/${id}`
-
-    );
-
-    return response.data;
-
-};
-
-/*
-========================================
-Add Question
-========================================
-*/
-
-export const addQuestion = async (
-
-    questionData
-
+export const uploadCSV = async (
+    file,
+    examId
 ) => {
-
-    const response = await api.post(
-
-        "/questions/add",
-
-        questionData
-
-    );
-
-    return response.data;
-
-};
-
-/*
-========================================
-Upload CSV
-========================================
-*/
-
-export const uploadCSV = async (file) => {
-
     const formData = new FormData();
 
     formData.append("file", file);
 
-    const response = await api.post(
+    formData.append("examId", examId);
 
+    const { data } = await api.post(
         "/admin/upload/csv",
-
         formData,
-
         {
-
             headers: {
-
-                "Content-Type": "multipart/form-data"
-
-            }
-
+                "Content-Type": "multipart/form-data",
+            },
         }
-
     );
 
-    return response.data;
-
+    return data;
 };

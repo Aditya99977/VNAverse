@@ -1,33 +1,95 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 
 export const AuthContext = createContext(null);
 
-function restoreStoredUser() {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+const TOKEN_KEY = "token";
+const USER_KEY = "user";
 
-    if (!token || !userData) {
-        return null;
-    }
+/*
+==========================================
+Restore Session
+==========================================
+*/
 
+const restoreSession = () => {
     try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const user = localStorage.getItem(USER_KEY);
+
+        if (!token || !user) {
+            return null;
+        }
+
         return {
             token,
-            ...JSON.parse(userData),
+            ...JSON.parse(user),
         };
-    } catch {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    } catch (error) {
+        console.error("Failed to restore session:", error);
+
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+
         return null;
     }
-}
+};
+
+/*
+==========================================
+Auth Provider
+==========================================
+*/
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(restoreStoredUser);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    /*
+    ==========================================
+    Initialize Auth
+    ==========================================
+    */
+
+    useEffect(() => {
+        const session = restoreSession();
+
+        if (session) {
+            setUser(session);
+        }
+
+        setLoading(false);
+    }, []);
+
+    /*
+    ==========================================
+    Save Session
+    ==========================================
+    */
+
+    const saveSession = (token, userData) => {
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+    };
+
+    /*
+    ==========================================
+    Clear Session
+    ==========================================
+    */
+
+    const clearSession = () => {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+    };
+
+    /*
+    ==========================================
+    Login
+    ==========================================
+    */
 
     const login = (token, userData) => {
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userData));
+        saveSession(token, userData);
 
         setUser({
             token,
@@ -35,45 +97,67 @@ export function AuthProvider({ children }) {
         });
     };
 
+    /*
+    ==========================================
+    Logout
+    ==========================================
+    */
+
     const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        clearSession();
         setUser(null);
     };
 
+    /*
+    ==========================================
+    Update User
+    ==========================================
+    */
+
     const updateUser = (updatedData) => {
         setUser((previousUser) => {
+            if (!previousUser) {
+                return null;
+            }
+
             const updatedUser = {
                 ...previousUser,
                 ...updatedData,
             };
 
-            localStorage.setItem(
-                "user",
-                JSON.stringify({
-                    id: updatedUser.id,
-                    name: updatedUser.name,
-                    email: updatedUser.email,
-                    role: updatedUser.role,
-                    preferredExam: updatedUser.preferredExam,
-                    profileImage: updatedUser.profileImage,
-                })
-            );
+            saveSession(updatedUser.token, {
+                id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                preferredExam: updatedUser.preferredExam,
+                profileImage: updatedUser.profileImage,
+            });
 
             return updatedUser;
         });
     };
 
+    /*
+    ==========================================
+    Context Value
+    ==========================================
+    */
+
+    const value = useMemo(
+        () => ({
+            user,
+            loading,
+            login,
+            logout,
+            updateUser,
+            isAuthenticated: !!user,
+        }),
+        [user, loading]
+    );
+
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                loading: false,
-                login,
-                logout,
-                updateUser,
-            }}
-        >
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
