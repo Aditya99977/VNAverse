@@ -1,231 +1,122 @@
-# ExamBooster Development Roadmap
+# VNAverse Roadmap
 
-## Project Progress Overview
+## Project Status
 
-| Module | Status |
-|---------|--------|
-| Authentication | ✅ Complete |
-| Student Dashboard | ✅ Complete |
-| Profile Management | ✅ Complete |
-| Practice Module | ✅ Complete |
-| Mock Test Module | ✅ Complete |
-| Performance Module | ✅ Complete |
-| Admin Panel | 🚧 In Progress |
-| Deployment | ⏳ Pending |
-| AI Features | ⏳ Planned |
+| Phase | Status |
+|--------|--------|
+| Foundation & Architecture | ✅ Complete |
+| Student Platform | ✅ Complete |
+| Backend Refactor | ✅ Complete |
+| Admin Panel Refactor | 🚧 In Progress |
+| Beta Stabilization | 🚧 In Progress |
+| Public Beta | ⏳ Planned |
+| AI Learning Platform | ⏳ Planned |
 
 ---
 
-# Phase 1 – Backend Foundation
+# Phase 1 — Foundation
 
-**Status:** ✅ Completed
+**Status:** ✅ Complete
 
-- [x] Project Setup
-- [x] Express Server
-- [x] MongoDB Atlas Integration
-- [x] Environment Configuration
-- [x] GitHub Repository
-- [x] REST API Structure
-- [x] JWT Authentication
-- [x] Password Hashing (bcrypt)
-- [x] User Registration
-- [x] User Login
+- Project Setup
+- Authentication System
+- Database Design
+- REST APIs
+- Security Implementation
+- Production Backend Architecture
 
 ---
 
-# Phase 2 – Student Features
+# Phase 2 — Student Platform
 
-**Status:** ✅ Completed
+**Status:** ✅ Complete
 
-### Dashboard
-
-- [x] Student Dashboard
-- [x] Dashboard Statistics
-- [x] Protected Dashboard
-
-### Profile
-
-- [x] View Profile
-- [x] Edit Profile
-- [x] Update Profile
-
-### Practice Module
-
-- [x] Subject Filtering
-- [x] Difficulty Filtering
-- [x] Random Questions
-- [x] Instant Practice
+- Student Dashboard
+- Exam Selection
+- Subject Management
+- Practice Module
+- Mock Tests
+- Previous Year Papers
+- Performance Analytics
+- Profile Management
 
 ---
 
-# Phase 3 – Mock Test Engine
-
-**Status:** ✅ Completed
-
-- [x] Test Model
-- [x] Start Test API
-- [x] Submit Test API
-- [x] Auto Score Calculation
-- [x] Result Storage
-- [x] Countdown Timer
-- [x] Question Navigation
-- [x] Question Palette
-- [x] Auto Submit
-- [x] Review Screen
-- [x] Result Screen
-
----
-
-# Phase 4 – Performance Module
-
-**Status:** ✅ Completed
-
-- [x] Performance Dashboard
-- [x] Test History
-- [x] Score Summary
-- [x] Subject-wise Statistics
-- [x] Progress Visualization
-
----
-
-# Phase 5 – Admin Panel
+# Phase 3 — Admin Platform
 
 **Status:** 🚧 In Progress
 
-### Completed
-
-- [x] Admin Authentication
-- [x] Admin Dashboard
-- [x] Dashboard Statistics
-- [x] Get All Users
-- [x] Get All Questions
-- [x] Add Question
-- [x] Question Form
-- [x] Bootstrap Modal
-- [x] CSV Upload Backend
-- [x] Role-Based Access Control
-
-### Remaining
-
-- [ ] Edit Question
-- [ ] Delete Question
-- [ ] Search Questions
-- [ ] CSV Upload UI
-- [ ] User Management
-- [ ] Mock Test Management
+- Dashboard
+- User Management
+- Exam Management
+- Subject Management
+- Question Management
+- Mock Test Management
+- Previous Year Papers
+- Analytics
 
 ---
 
-# Phase 6 – Deployment
+# Phase 4 — Beta Release
 
-**Status:** ⏳ Pending
+**Status:** 🚧 In Progress
 
-- [ ] Backend Deployment (Render)
-- [ ] Frontend Deployment (Vercel)
-- [ ] Environment Variables
-- [ ] Production MongoDB
-- [ ] HTTPS Configuration
-- [ ] Final Testing
-- [ ] Public Launch
+Current priorities:
+
+- Complete Admin Panel Refactor
+- UI Consistency
+- Backend & Frontend Integration
+- Performance Optimization
+- Bug Fixes
+- Production Testing
 
 ---
 
-# Phase 7 – AI Features
+# Phase 5 — Public Launch
 
 **Status:** ⏳ Planned
 
-- [ ] AI Study Planner
-- [ ] Weak Topic Detection
-- [ ] Personalized Study Recommendations
-- [ ] Smart Revision Suggestions
-- [ ] AI Performance Analysis
-- [ ] AI Mock Test Recommendation
-- [ ] AI Learning Insights
+- Cloud Deployment
+- Production Database
+- Public Beta Release
+- User Feedback
+- Performance Monitoring
 
 ---
 
-# Future Enhancements
+# Phase 6 — AI Learning Ecosystem
 
-- [ ] Question Bookmarking
-- [ ] Favorite Questions
-- [ ] Daily Challenge
-- [ ] Leaderboard
-- [ ] Exam Notifications
-- [ ] Study Calendar
-- [ ] Dark Mode
-- [ ] PWA Support
-- [ ] Mobile Optimization
-- [ ] Email Notifications
+**Status:** ⏳ Planned
 
----
-
-# Supported Exams
-
-The platform is being developed for:
-
-- IBPS PO
-- IBPS Clerk
-- SBI PO
-- SBI Clerk
-- SSC CGL
-- SSC CHSL
-- SSC MTS
-- SSC CPO
-- RRB NTPC
-- RRB Group D
-- RRB JE
-- LIC Assistant
-- LIC AAO
-- EPFO
-- State Government Exams
-- Other Competitive Examinations
-
----
-
-# Current Completion Status
-
-```
-Authentication          ██████████ 100%
-
-Student Dashboard       ██████████ 100%
-
-Profile                 ██████████ 100%
-
-Practice Module         ██████████ 100%
-
-Mock Test Module        ██████████ 100%
-
-Performance Module      ██████████ 100%
-
-Admin Panel             █████████░ 90%
-
-Deployment              ░░░░░░░░░░ 0%
-
-AI Features             ░░░░░░░░░░ 0%
-```
-
----
-
-# Immediate Next Goals (Day 16)
-
-- Complete Edit Question
-- Complete Delete Question
-- Add Search Functionality
-- Build CSV Upload UI
-- Finish Admin Panel
-- Prepare for Deployment
+- AI Tutor
+- AI Study Planner
+- Personalized Learning
+- Smart Recommendations
+- AI Performance Insights
+- Adaptive Learning Paths
 
 ---
 
 # Long-Term Vision
 
-Build **ExamBooster** into a modern AI-powered competitive examination platform that helps students prepare for government and banking examinations through:
+VNAverse aims to become a comprehensive AI-powered learning ecosystem that helps learners prepare for competitive exams, develop professional skills, and achieve their career goals through personalized, data-driven education.
 
-- Intelligent Practice
-- AI-Powered Learning
-- Personalized Recommendations
-- Performance Analytics
-- Mock Test Simulation
-- Comprehensive Progress Tracking
+---
 
-with a scalable architecture capable of supporting thousands of concurrent learners.
+# Current Progress
+
+```text
+Foundation & Architecture    ██████████ 100%
+
+Student Platform             ██████████ 100%
+
+Backend Refactor             ██████████ 100%
+
+Admin Panel                  ████████░░ 80%
+
+Beta Stabilization           ██████░░░░ 60%
+
+Public Beta                  ░░░░░░░░░░ 0%
+
+AI Learning Platform         ░░░░░░░░░░ 0%
+```
