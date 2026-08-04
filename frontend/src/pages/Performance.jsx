@@ -7,51 +7,92 @@ import SubjectProgress from "../components/performance/SubjectProgress";
 import RecentTests from "../components/performance/RecentTests";
 import PerformanceChart from "../components/performance/PerformanceChart";
 
-import api from "../services/api";
+import {
+    getUserPerformance,
+} from "../services/performanceService";
 
 function Performance() {
 
-    const [dashboardData, setDashboardData] = useState(null);
+    /*
+    =====================================
+    State
+    =====================================
+    */
 
-    const [loading, setLoading] = useState(true);
+    const [performanceData, setPerformanceData] =
+        useState(null);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+    /*
+    =====================================
+    Load Performance
+    =====================================
+    */
 
     useEffect(() => {
 
         const fetchPerformance = async () => {
 
-        try {
+            try {
 
-            const response = await api.get(
+                setLoading(true);
 
-                "/dashboard"
+                setError("");
 
-            );
+                const response =
+                    await getUserPerformance();
 
-            setDashboardData(
+                if (!response.success) {
 
-                response.data
+                    throw new Error(
+                        response.message ||
+                        "Failed to load performance."
+                    );
 
-            );
+                }
 
-        }
+                setPerformanceData(
+                    response.data || []
+                );
 
-        catch (err) {
+            }
 
-            console.log(err);
+            catch (err) {
 
-        }
+                console.error(err);
 
-        finally {
+                setError(
+                    err?.response?.data?.message ||
 
-            setLoading(false);
+                    err?.message ||
 
-        }
+                    "Unable to load performance."
+                );
+
+            }
+
+            finally {
+
+                setLoading(false);
+
+            }
 
         };
 
         fetchPerformance();
 
     }, []);
+
+    /*
+    =====================================
+    Loading
+    =====================================
+    */
 
     if (loading) {
 
@@ -75,6 +116,58 @@ function Performance() {
 
     }
 
+    /*
+    =====================================
+    Error
+    =====================================
+    */
+
+    if (error) {
+
+        return (
+
+            <DashboardLayout>
+
+                <div className="container-fluid">
+
+                    <div className="alert alert-danger">
+
+                        {error}
+
+                    </div>
+
+                </div>
+
+            </DashboardLayout>
+
+        );
+
+    }
+
+    /*
+    =====================================
+    Safe Defaults
+    =====================================
+    */
+
+    const stats =
+        performanceData?.stats || {};
+
+    const subjectProgress =
+        performanceData?.subjectProgress || [];
+
+    const weeklyPerformance =
+        performanceData?.weeklyPerformance || [];
+
+    const recentTests =
+        performanceData?.recentTests || [];
+
+    /*
+    =====================================
+    UI
+    =====================================
+    */
+
     return (
 
         <DashboardLayout>
@@ -88,9 +181,7 @@ function Performance() {
                 </h2>
 
                 <PerformanceStats
-
-                    stats={dashboardData.stats}
-
+                    stats={stats}
                 />
 
                 <div className="row">
@@ -98,9 +189,7 @@ function Performance() {
                     <div className="col-lg-6">
 
                         <SubjectProgress
-
-                            subjects={dashboardData.subjectProgress}
-
+                            subjects={subjectProgress}
                         />
 
                     </div>
@@ -108,9 +197,7 @@ function Performance() {
                     <div className="col-lg-6">
 
                         <PerformanceChart
-
-                            performance={dashboardData.weeklyPerformance}
-
+                            performance={weeklyPerformance}
                         />
 
                     </div>
@@ -118,9 +205,7 @@ function Performance() {
                 </div>
 
                 <RecentTests
-
-                    tests={dashboardData.recentTests}
-
+                    tests={recentTests}
                 />
 
             </div>

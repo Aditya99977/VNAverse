@@ -1,4 +1,16 @@
-import { createContext, useEffect, useMemo, useState } from "react";
+import {
+    createContext,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
+import {
+    getCurrentUser,
+    loginUser,
+    logoutUser,
+} from "../services/authService";
 
 export const AuthContext = createContext(null);
 
@@ -6,38 +18,29 @@ const TOKEN_KEY = "token";
 const USER_KEY = "user";
 
 /*
-==========================================
-Restore Session
-==========================================
+==================================================
+Session Helpers
+==================================================
 */
 
-const restoreSession = () => {
-    try {
-        const token = localStorage.getItem(TOKEN_KEY);
-        const user = localStorage.getItem(USER_KEY);
+const saveSession = (token, user) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+};
 
-        if (!token || !user) {
-            return null;
-        }
+const clearSession = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+};
 
-        return {
-            token,
-            ...JSON.parse(user),
-        };
-    } catch (error) {
-        console.error("Failed to restore session:", error);
-
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-
-        return null;
-    }
+const getStoredToken = () => {
+    return localStorage.getItem(TOKEN_KEY);
 };
 
 /*
-==========================================
+==================================================
 Auth Provider
-==========================================
+==================================================
 */
 
 export function AuthProvider({ children }) {
@@ -45,76 +48,103 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     /*
-    ==========================================
-    Initialize Auth
-    ==========================================
+    ==============================================
+    Restore Session
+    ==============================================
     */
 
-    useEffect(() => {
-        const session = restoreSession();
+    const restoreSession = useCallback(async () => {
+        const token = getStoredToken();
 
-        if (session) {
-            setUser(session);
+        if (!token) {
+            setLoading(false);
+            return;
         }
 
-        setLoading(false);
+        try {
+            const response = await getCurrentUser();
+
+            if (!response.success) {
+                throw new Error(response.message);
+            }
+
+            const userData = response.data;
+
+            saveSession(token, userData);
+
+            setUser({
+                token,
+                ...userData,
+            });
+        } catch (error) {
+            console.error(
+                "Session restoration failed:",
+                error
+            );
+
+            clearSession();
+            setUser(null);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    /*
-    ==========================================
-    Save Session
-    ==========================================
-    */
-
-    const saveSession = (token, userData) => {
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(USER_KEY, JSON.stringify(userData));
-    };
+    useEffect(() => {
+        restoreSession();
+    }, [restoreSession]);
 
     /*
-    ==========================================
-    Clear Session
-    ==========================================
-    */
-
-    const clearSession = () => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-    };
-
-    /*
-    ==========================================
+    ==============================================
     Login
-    ==========================================
+    ==============================================
     */
 
-    const login = (token, userData) => {
-        saveSession(token, userData);
+    const login = useCallback(async (credentials) => {
+        const response = await loginUser(credentials);
+
+        if (!response.success) {
+            throw new Error(response.message);
+        }
+
+        const { token, user } = response.data;
+
+        saveSession(token, user);
 
         setUser({
             token,
-            ...userData,
+            ...user,
         });
-    };
+
+        return response;
+    }, []);
 
     /*
-    ==========================================
+    ==============================================
     Logout
-    ==========================================
+    ==============================================
     */
 
-    const logout = () => {
-        clearSession();
-        setUser(null);
-    };
+    const logout = useCallback(async () => {
+        try {
+            await logoutUser();
+        } catch (error) {
+            console.error(
+                "Logout request failed:",
+                error
+            );
+        } finally {
+            clearSession();
+            setUser(null);
+        }
+    }, []);
 
     /*
-    ==========================================
+    ==============================================
     Update User
-    ==========================================
+    ==============================================
     */
 
-    const updateUser = (updatedData) => {
+    const updateUser = useCallback((updatedData) => {
         setUser((previousUser) => {
             if (!previousUser) {
                 return null;
@@ -126,22 +156,28 @@ export function AuthProvider({ children }) {
             };
 
             saveSession(updatedUser.token, {
-                id: updatedUser.id,
+                _id: updatedUser._id,
                 name: updatedUser.name,
                 email: updatedUser.email,
                 role: updatedUser.role,
-                preferredExam: updatedUser.preferredExam,
                 profileImage: updatedUser.profileImage,
+                currentExam: updatedUser.currentExam,
+                testsAttempted:
+                    updatedUser.testsAttempted,
+                highestScore:
+                    updatedUser.highestScore,
+                status: updatedUser.status,
+                createdAt: updatedUser.createdAt,
             });
 
             return updatedUser;
         });
-    };
+    }, []);
 
     /*
-    ==========================================
+    ==============================================
     Context Value
-    ==========================================
+    ==============================================
     */
 
     const value = useMemo(
@@ -153,7 +189,13 @@ export function AuthProvider({ children }) {
             updateUser,
             isAuthenticated: !!user,
         }),
-        [user, loading]
+        [
+            user,
+            loading,
+            login,
+            logout,
+            updateUser,
+        ]
     );
 
     return (

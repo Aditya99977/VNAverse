@@ -1,12 +1,27 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 
-import { getAllExams, selectPreferredExam } from "../services/examService";
-import { useAuth } from "./useAuth";
+import {
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
+
+import { getAllExams } from "../services/examService";
+
+import { useExam } from "../context/ExamContext";
 
 export default function useExamSelection() {
     const navigate = useNavigate();
-    const { updateUser } = useAuth();
+    const location = useLocation();
+
+    const {
+        currentExam,
+        selectExam,
+    } = useExam();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -16,96 +31,177 @@ export default function useExamSelection() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedExam, setSelectedExam] = useState(null);
 
-    // =============================================
-    // Load Exams
-    // =============================================
+    /*
+    ==========================================
+    Redirect Destination
+    ==========================================
+    */
+
+    const redirectTo =
+        location.state?.from || "/dashboard";
+
+    /*
+    ==========================================
+    Load Exams
+    ==========================================
+    */
+
     useEffect(() => {
         const fetchExams = async () => {
             try {
                 setLoading(true);
+                setError("");
 
-                const response = await getAllExams();
+                const response =
+                    await getAllExams();
 
-                setExams(response.exams || []);
-            } catch (err) {
-                console.error(err);
+                if (!response.success) {
+                    throw new Error(
+                        response.message ||
+                            "Failed to load exams."
+                    );
+                }
 
-                setError("Failed to load exams.");
+                const examList =
+                    response.data || [];
+
+                setExams(examList);
+
+                /*
+                ==========================================
+                Pre-select Current Exam
+                ==========================================
+                */
+
+                if (currentExam?._id) {
+                    const existingExam =
+                        examList.find(
+                            (exam) =>
+                                exam._id ===
+                                currentExam._id
+                        );
+
+                    if (existingExam) {
+                        setSelectedExam(
+                            existingExam
+                        );
+                    }
+                }
+            } catch (error) {
+                setError(
+                    error?.response?.data
+                        ?.message ||
+                        error?.message ||
+                        "Failed to load exams."
+                );
             } finally {
                 setLoading(false);
             }
         };
 
         fetchExams();
-    }, []);
+    }, [currentExam]);
 
-    // =============================================
-    // Filter Exams
-    // =============================================
+    /*
+    ==========================================
+    Filter Exams
+    ==========================================
+    */
+
     const filteredExams = useMemo(() => {
-        if (!searchQuery.trim()) {
+        const query = searchQuery
+            .trim()
+            .toLowerCase();
+
+        if (!query) {
             return exams;
         }
 
         return exams.filter((exam) =>
             exam.name
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase())
+                ?.toLowerCase()
+                .includes(query)
         );
     }, [exams, searchQuery]);
 
-    // =============================================
-    // Group Exams
-    // =============================================
+    /*
+    ==========================================
+    Group Exams
+    ==========================================
+    */
+
     const groupedExams = useMemo(() => {
-        return {
-            Banking: filteredExams.filter(
-                (exam) => exam.category === "Banking"
-            ),
+        return filteredExams.reduce(
+            (groups, exam) => {
+                const category =
+                    exam.category || "Other";
 
-            SSC: filteredExams.filter(
-                (exam) => exam.category === "SSC"
-            ),
+                if (!groups[category]) {
+                    groups[category] = [];
+                }
 
-            Railway: filteredExams.filter(
-                (exam) => exam.category === "Railway"
-            ),
-        };
+                groups[category].push(exam);
+
+                return groups;
+            },
+            {}
+        );
     }, [filteredExams]);
 
-    // =============================================
-    // Select Exam
-    // =============================================
-    const handleSelectExam = (exam) => {
-        setSelectedExam(exam);
-    };
+    /*
+    ==========================================
+    Select Exam
+    ==========================================
+    */
 
-    // =============================================
-    // Continue
-    // =============================================
-    const continueToDashboard = async () => {
-        if (!selectedExam) return;
+    const handleSelectExam = useCallback(
+        (exam) => {
+            setSelectedExam(exam);
+            setError("");
+        },
+        []
+    );
 
-        try {
-            setSaving(true);
+    /*
+    ==========================================
+    Continue
+    ==========================================
+    */
 
-            await selectPreferredExam(selectedExam._id);
+    const continueToDashboard =
+        useCallback(async () => {
+            if (!selectedExam || saving) {
+                return;
+            }
 
-            updateUser({
-                preferredExam: selectedExam,
-            });
+            try {
+                setSaving(true);
+                setError("");
 
-            navigate("/dashboard", {
-                replace: true,
-            });
-        } catch (err) {
-            console.error(err);
+                await selectExam(
+                    selectedExam._id
+                );
 
-            setError("Unable to save selected exam.");
-        } finally {
-            setSaving(false);
-        }
-    };
+                navigate(redirectTo, {
+                    replace: true,
+                });
+            } catch (error) {
+                setError(
+                    error?.response?.data
+                        ?.message ||
+                        error?.message ||
+                        "Unable to save selected exam."
+                );
+            } finally {
+                setSaving(false);
+            }
+        }, [
+            selectedExam,
+            saving,
+            selectExam,
+            navigate,
+            redirectTo,
+        ]);
 
     return {
         loading,

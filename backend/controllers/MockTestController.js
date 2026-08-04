@@ -1,211 +1,352 @@
-const MockTest = require("../models/MockTest");
+const asyncHandler = require("../utils/asyncHandler");
 
-// ==============================
-// Create Mock Test
-// ==============================
-exports.createMockTest = async (req, res) => {
-  try {
-    const mockTest = await MockTest.create({
-      ...req.body,
-      createdBy: req.user.id,
-    });
+const ApiResponse = require("../utils/ApiResponse");
 
-    res.status(201).json({
-      success: true,
-      message: "Mock Test created successfully",
-      data: mockTest,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+const mockTestService = require("../services/mockTestService");
 
-// ==============================
-// Get All Mock Tests
-// ==============================
-exports.getAllMockTests = async (req, res) => {
-  try {
-    const mockTests = await MockTest.find()
-      .populate("createdBy", "name email")
-      .populate("questions", "question subject difficulty")
-      .sort({ createdAt: -1 });
+/*
+==================================================
+Student APIs
+==================================================
+*/
 
-    res.status(200).json({
-      success: true,
-      count: mockTests.length,
-      data: mockTests,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+/*
+==================================================
+Start Mock Test
+==================================================
+*/
 
-// ==============================
-// Get Single Mock Test
-// ==============================
-exports.getMockTest = async (req, res) => {
-  try {
-    const mockTest = await MockTest.findById(req.params.id)
-      .populate("createdBy", "name email")
-      .populate("questions");
+exports.startMockTest = asyncHandler(async (req, res) => {
 
-    if (!mockTest) {
-      return res.status(404).json({
-        success: false,
-        message: "Mock Test not found",
-      });
-    }
+    const result =
+        await mockTestService.startMockTest({
 
-    res.status(200).json({
-      success: true,
-      data: mockTest,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+            userId: req.user.id,
 
-// ==============================
-// Update Mock Test
-// ==============================
-exports.updateMockTest = async (req, res) => {
-  try {
-    const mockTest = await MockTest.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
+            mockTestId: req.body.mockTestId,
+
+        });
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test started successfully.",
+
+            result
+
+        )
+
     );
 
-    if (!mockTest) {
-      return res.status(404).json({
-        success: false,
-        message: "Mock Test not found",
-      });
-    }
+});
 
-    res.status(200).json({
-      success: true,
-      message: "Mock Test updated successfully",
-      data: mockTest,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+/*
+==================================================
+Submit Mock Test
+==================================================
+*/
 
-// ==============================
-// Delete Mock Test
-// ==============================
-exports.deleteMockTest = async (req, res) => {
-  try {
-    const mockTest = await MockTest.findById(req.params.id);
+exports.submitMockTest = asyncHandler(async (req, res) => {
 
-    if (!mockTest) {
-      return res.status(404).json({
-        success: false,
-        message: "Mock Test not found",
-      });
-    }
+    const result =
+        await mockTestService.submitMockTest({
 
-    await mockTest.deleteOne();
+            userId: req.user.id,
 
-    res.status(200).json({
-      success: true,
-      message: "Mock Test deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+            mockTestId: req.body.mockTestId,
 
-// ==============================
-// Publish / Unpublish Mock Test
-// ==============================
-exports.toggleMockTestStatus = async (req, res) => {
-  try {
-    const mockTest = await MockTest.findById(req.params.id);
+            answers: req.body.answers,
 
-    if (!mockTest) {
-      return res.status(404).json({
-        success: false,
-        message: "Mock Test not found",
-      });
-    }
+            totalTime: req.body.totalTime,
 
-    mockTest.status =
-      mockTest.status === "Draft" ? "Published" : "Draft";
+        });
 
-    await mockTest.save();
+    res.status(200).json(
 
-    res.status(200).json({
-      success: true,
-      message: `Mock Test ${mockTest.status} successfully`,
-      data: mockTest,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+        ApiResponse.success(
 
-// ==============================
-// Mock Test Statistics
-// ==============================
-exports.getMockTestStatistics = async (req, res) => {
-  try {
-    const total = await MockTest.countDocuments();
+            "Mock test submitted successfully.",
 
-    const published = await MockTest.countDocuments({
-      status: "Published",
-    });
+            result
 
-    const draft = await MockTest.countDocuments({
-      status: "Draft",
-    });
+        )
 
-    const mockTests = await MockTest.find();
-
-    const totalQuestions = mockTests.reduce(
-      (sum, test) => sum + test.questions.length,
-      0
     );
 
-    const averageQuestions =
-      total > 0 ? (totalQuestions / total).toFixed(2) : 0;
+});
 
-    res.status(200).json({
-      success: true,
-      data: {
-        total,
-        published,
-        draft,
-        averageQuestions,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+/*
+==================================================
+Mock Test History
+==================================================
+*/
+
+exports.getHistory = asyncHandler(async (req, res) => {
+
+    const history =
+        await mockTestService.getHistory(
+            req.user.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test history fetched successfully.",
+
+            history
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Attempt Details
+==================================================
+*/
+
+exports.getById = asyncHandler(async (req, res) => {
+
+    const attempt =
+        await mockTestService.getById(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test attempt fetched successfully.",
+
+            attempt
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Delete Attempt
+==================================================
+*/
+
+exports.delete = asyncHandler(async (req, res) => {
+
+    await mockTestService.delete(
+        req.params.id
+    );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test attempt deleted successfully."
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Admin APIs
+==================================================
+*/
+
+/*
+==================================================
+Create Mock Test
+==================================================
+*/
+
+exports.createMockTest = asyncHandler(async (req, res) => {
+
+    const mockTest =
+        await mockTestService.createMockTest(
+            req.body
+        );
+
+    res.status(201).json(
+
+        ApiResponse.success(
+
+            "Mock test created successfully.",
+
+            mockTest
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Get All Mock Tests
+==================================================
+*/
+
+exports.getAllMockTests = asyncHandler(async (req, res) => {
+
+    const mockTests =
+        await mockTestService.getAllMockTests(
+            req.query
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock tests fetched successfully.",
+
+            mockTests
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Get Mock Test By ID
+==================================================
+*/
+
+exports.getMockTestById = asyncHandler(async (req, res) => {
+
+    const mockTest =
+        await mockTestService.getMockTestById(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test fetched successfully.",
+
+            mockTest
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Update Mock Test
+==================================================
+*/
+
+exports.updateMockTest = asyncHandler(async (req, res) => {
+
+    const mockTest =
+        await mockTestService.updateMockTest(
+
+            req.params.id,
+
+            req.body
+
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test updated successfully.",
+
+            mockTest
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Publish / Unpublish Mock Test
+==================================================
+*/
+
+exports.toggleMockTestStatus = asyncHandler(async (req, res) => {
+
+    const mockTest =
+        await mockTestService.toggleMockTestStatus(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test status updated successfully.",
+
+            mockTest
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Delete Mock Test
+==================================================
+*/
+
+exports.deleteMockTest = asyncHandler(async (req, res) => {
+
+    const mockTest =
+        await mockTestService.deleteMockTest(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test deleted successfully.",
+
+            mockTest
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Mock Test Statistics
+==================================================
+*/
+
+exports.getStatistics = asyncHandler(async (req, res) => {
+
+    const statistics =
+        await mockTestService.getStatistics();
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Mock test statistics fetched successfully.",
+
+            statistics
+
+        )
+
+    );
+
+});

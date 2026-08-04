@@ -1,394 +1,127 @@
-const bcrypt = require("bcryptjs");
+const authService = require("../services/authService");
+const asyncHandler = require("../utils/asyncHandler");
+const ApiResponse = require("../utils/ApiResponse");
 
-const generateToken = require("../utils/generateToken");
-const User = require("../models/User");
+/*
+==========================================
+Register
+POST /api/auth/register
+==========================================
+*/
 
-// =============================================
-// Validation Helpers
-// =============================================
+exports.register = asyncHandler(async (req, res) => {
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const result = await authService.register(req.body);
 
-const isStrongPassword = (password) => {
-    return (
-        password.length >= 8 &&
-        /[A-Z]/.test(password) &&
-        /[a-z]/.test(password) &&
-        /\d/.test(password) &&
-        /[@$!%*?&]/.test(password)
+    res.status(201).json(
+        ApiResponse.success(
+            "Registration successful.",
+            result
+        )
     );
-};
 
-// =============================================
-// Shared Authentication Function
-// =============================================
+});
 
-const authenticateUser = async (
-    email,
-    password,
-    adminOnly = false
-) => {
+/*
+==========================================
+Login
+POST /api/auth/login
+==========================================
+*/
 
-    email = email?.trim().toLowerCase();
+exports.login = asyncHandler(async (req, res) => {
 
-    if (!email || !password) {
-        return {
-            status: 400,
-            body: {
-                success: false,
-                message: "Email and password are required.",
-            },
-        };
-    }
+    const result = await authService.login(
+        req.body.email,
+        req.body.password
+    );
 
-    const user = await User.findOne({ email })
-        .select("+password")
-        .populate("preferredExam", "name slug category");
+    res.status(200).json(
+        ApiResponse.success(
+            "Login successful.",
+            result
+        )
+    );
 
-    if (!user) {
-        return {
-            status: 401,
-            body: {
-                success: false,
-                message: "Invalid email or password.",
-            },
-        };
-    }
+});
 
-    if (!user.password) {
-        return {
-            status: 500,
-            body: {
-                success: false,
-                message: "Account data is invalid.",
-            },
-        };
-    }
+/*
+==========================================
+Current User
+GET /api/auth/me
+==========================================
+*/
 
-    const isMatch = await bcrypt.compare(password, user.password);
+exports.getCurrentUser = asyncHandler(async (req, res) => {
 
-    if (!isMatch) {
-        return {
-            status: 401,
-            body: {
-                success: false,
-                message: "Invalid email or password.",
-            },
-        };
-    }
+    const user =
+        await authService.getCurrentUser(
+            req.user.id
+        );
 
-    if (user.status && user.status !== "active") {
-        return {
-            status: 403,
-            body: {
-                success: false,
-                message: "Your account has been suspended.",
-            },
-        };
-    }
+    res.status(200).json(
+        ApiResponse.success(
+            "User fetched successfully.",
+            user
+        )
+    );
 
-    if (adminOnly && user.role !== "admin") {
-        return {
-            status: 403,
-            body: {
-                success: false,
-                message: "Administrator access only.",
-            },
-        };
-    }
+});
+/*
+==========================================
+Change Password
+PUT /api/auth/change-password
+==========================================
+*/
 
-    user.lastActive = new Date();
+exports.changePassword = asyncHandler(async (req, res) => {
 
-    await user.save();
+    const result =
+        await authService.changePassword(
 
-    const token = generateToken(user._id);
+            req.user.id,
 
-    return {
-        status: 200,
-        body: {
-            success: true,
-            message: "Login successful.",
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                preferredExam: user.preferredExam,
-                profileImage: user.profileImage,
-            },
-        },
-    };
-};
+            req.body.currentPassword,
 
-// =============================================
-// User Registration
-// =============================================
-
-exports.signup = async (req, res) => {
-
-    try {
-
-        let {
-
-            name,
-
-            email,
-
-            password
-
-        } = req.body;
-
-        name = name?.trim();
-
-        email = email?.trim().toLowerCase();
-
-        if (!name || !email || !password) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Please fill all required fields.",
-
-            });
-
-        }
-
-        if (name.length < 3 || name.length > 50) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Name must be between 3 and 50 characters.",
-
-            });
-
-        }
-
-        if (!emailRegex.test(email)) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message: "Please enter a valid email address.",
-
-            });
-
-        }
-
-        if (!isStrongPassword(password)) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                message:
-                    "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character.",
-
-            });
-
-        }        const existingUser = await User.findOne({
-
-            email
-
-        });
-
-        if (existingUser) {
-
-            return res.status(409).json({
-
-                success: false,
-
-                message: "An account with this email already exists.",
-
-            });
-
-        }
-
-        const hashedPassword = await bcrypt.hash(
-
-            password,
-
-            10
+            req.body.newPassword
 
         );
 
-        const user = await User.create({
+    res.status(200).json(
 
-            name,
+        ApiResponse.success(
 
-            email,
+            "Password changed successfully.",
 
-            password: hashedPassword,
+            result
 
-            isVerified: true,
+        )
 
-        });
+    );
 
-        await user.populate(
-            "preferredExam",
-            "name slug category"
-        );
+});
+/*
+==========================================
+Logout
+POST /api/auth/logout
+==========================================
+*/
 
-        const token = generateToken(
+exports.logout = asyncHandler(async (req, res) => {
 
-            user._id
+    const result =
+        await authService.logout();
 
-        );
+    res.status(200).json(
 
-        return res.status(201).json({
+        ApiResponse.success(
 
-            success: true,
+            "Logout successful.",
 
-            message: "Registration successful.",
+            result
 
-            token,
+        )
 
-            user: {
+    );
 
-                id: user._id,
-
-                name: user.name,
-
-                email: user.email,
-
-                role: user.role,
-
-                preferredExam: user.preferredExam,
-
-                profileImage: user.profileImage,
-
-            },
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.error(
-
-            "Signup Error:",
-
-            error
-
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal server error.",
-
-        });
-
-    }
-
-};
-
-// =============================================
-// Student Login
-// =============================================
-
-exports.login = async (req, res) => {
-
-    try {
-
-        const { email, password } = req.body;
-
-        const result = await authenticateUser(
-
-            email,
-
-            password,
-
-            false
-
-        );
-
-        return res
-
-            .status(result.status)
-
-            .json(result.body);
-
-    }
-
-    catch (error) {
-
-        console.error(
-
-            "Login Error:",
-
-            error
-
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal server error.",
-
-        });
-
-    }
-
-};// =============================================
-// Admin Login
-// =============================================
-
-exports.adminLogin = async (req, res) => {
-
-    try {
-
-        const {
-
-            email,
-
-            password
-
-        } = req.body;
-
-        const result = await authenticateUser(
-
-            email,
-
-            password,
-
-            true
-
-        );
-
-        return res
-
-            .status(result.status)
-
-            .json(result.body);
-
-    }
-
-    catch (error) {
-
-        console.error(
-
-            "Admin Login Error:",
-
-            error
-
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: "Internal server error.",
-
-        });
-
-    }
-
-};
+});

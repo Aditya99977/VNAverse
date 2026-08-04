@@ -13,43 +13,32 @@ import {
     updateProfile,
 } from "../services/profileService";
 
-import { getAllExams } from "../services/examService";
-
 function EditProfile() {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
 
-    const [exams, setExams] = useState([]);
-
     const [formData, setFormData] = useState({
         name: "",
         email: "",
-        preferredExam: "",
     });
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchProfile = async () => {
             try {
-                const [profile, examResponse] = await Promise.all([
-                    getProfile(),
-                    getAllExams(),
-                ]);
+                const profile = await getProfile();
 
                 setFormData({
                     name: profile.name || "",
                     email: profile.email || "",
-                    preferredExam: profile.preferredExam?._id || "",
                 });
-
-                setExams(examResponse.exams || []);
             } catch (err) {
                 console.error(err);
                 toast.error("Failed to load profile.");
             }
         };
 
-        fetchData();
+        fetchProfile();
     }, []);
 
     const handleChange = (e) => {
@@ -109,38 +98,12 @@ function EditProfile() {
                     <FormInput
                         label="Email"
                         name="email"
+                        type="email"
                         placeholder="Enter your email"
                         value={formData.email}
                         onChange={handleChange}
                         disabled={loading}
                     />
-
-                    <div className="mb-3">
-                        <label className="form-label fw-semibold">
-                            Preferred Exam
-                        </label>
-
-                        <select
-                            className="form-select"
-                            name="preferredExam"
-                            value={formData.preferredExam}
-                            onChange={handleChange}
-                            disabled={loading}
-                        >
-                            <option value="">
-                                Select Preferred Exam
-                            </option>
-
-                            {exams.map((exam) => (
-                                <option
-                                    key={exam._id}
-                                    value={exam._id}
-                                >
-                                    {exam.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
 
                     <AuthButton
                         text="Save Changes"

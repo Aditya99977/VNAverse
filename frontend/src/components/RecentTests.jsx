@@ -1,5 +1,33 @@
 function RecentTests({ tests = [] }) {
 
+    const formatDate = (date) => {
+
+        if (!date) {
+
+            return "Unknown Date";
+
+        }
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+
+            return "Unknown Date";
+
+        }
+
+        return parsedDate.toLocaleDateString();
+
+    };
+
+    const formatScore = (score) => {
+
+        const value = Number(score ?? 0);
+
+        return `${Math.min(Math.max(value, 0), 100)}%`;
+
+    };
+
     return (
 
         <div
@@ -71,14 +99,18 @@ function RecentTests({ tests = [] }) {
                         tests.map((test, index) => (
 
                             <div
-                                key={index}
+                                key={
+                                    test?._id ||
+                                    test?.id ||
+                                    `${test?.exam}-${index}`
+                                }
                                 className={`d-flex justify-content-between align-items-center py-3 ${
                                     index !== tests.length - 1
                                         ? "border-bottom"
                                         : ""
                                 }`}
                                 style={{
-                                    borderColor: "rgba(255,255,255,.08) !important",
+                                    borderColor: "rgba(255,255,255,.08)",
                                 }}
                             >
 
@@ -115,7 +147,7 @@ function RecentTests({ tests = [] }) {
                                                 color: "#F8FAFC",
                                             }}
                                         >
-                                            {test.exam}
+                                            {test?.exam || "Practice Session"}
                                         </div>
 
                                         <small
@@ -123,9 +155,7 @@ function RecentTests({ tests = [] }) {
                                                 color: "#94A3B8",
                                             }}
                                         >
-                                            {new Date(
-                                                test.submittedAt
-                                            ).toLocaleDateString()}
+                                            {formatDate(test?.submittedAt)}
                                         </small>
 
                                     </div>
@@ -139,13 +169,13 @@ function RecentTests({ tests = [] }) {
                                             "rgba(34,197,94,.15)",
                                         color: "#22C55E",
                                         fontWeight: 700,
-                                        minWidth: "65px",
+                                        minWidth: "70px",
                                         textAlign: "center",
                                         border:
                                             "1px solid rgba(34,197,94,.25)",
                                     }}
                                 >
-                                    {test.score}
+                                    {formatScore(test?.score)}
                                 </span>
 
                             </div>

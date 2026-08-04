@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import DashboardLayout from "../components/DashboardLayout";
 
 import MockTestHeader from "../components/mocktest/MockTestHeader";
@@ -9,270 +7,71 @@ import QuestionPalette from "../components/mocktest/QuestionPalette";
 import ResultCard from "../components/mocktest/ResultCard";
 import ReviewScreen from "../components/mocktest/ReviewScreen";
 
-import {
-
-    startTest,
-
-    submitTest
-
-} from "../services/testService";
+import useMockTest from "../hooks/useMockTest";
 
 function MockTest() {
 
-    const [started, setStarted] = useState(false);
+    const {
 
-    const [loading, setLoading] = useState(false);
+        session,
 
-    const [submitted, setSubmitted] = useState(false);
+        actions,
 
-    const [autoSubmitted, setAutoSubmitted] = useState(false);
+    } = useMockTest();
 
-    const [reviewMode, setReviewMode] = useState(false);
+    const {
 
-    const [testId, setTestId] = useState("");
+        started,
 
-    const exam = "General Mock Test";
+        loading,
 
-    const [questions, setQuestions] = useState([]);
+        submitting,
 
-    const [currentQuestion, setCurrentQuestion] = useState(0);
+        autoSubmitted,
 
-    const [answers, setAnswers] = useState({});
+        reviewMode,
 
-    const [result, setResult] = useState(null);
+        exam,
 
-    /*
-    =====================================
-    Start Mock Test
-    =====================================
-    */
+        duration,
 
-    const handleStartTest = async () => {
+        questions,
 
-        try {
+        currentQuestion,
 
-            setLoading(true);
+        currentQuestionData,
 
-            const data = await startTest(exam);
+        selectedAnswer,
 
-            setTestId(data.testId);
+        answers,
 
-            setQuestions(data.questions);
+        result,
 
-            setStarted(true);
+    } = session;
 
-            setCurrentQuestion(0);
+    const {
 
-            setAnswers({});
+        startTest,
 
-            setResult(null);
+        submitTest,
 
-            setSubmitted(false);
+        selectAnswer,
 
-            setAutoSubmitted(false);
+        previousQuestion,
 
-            setReviewMode(false);
+        nextQuestion,
 
-        }
+        jumpToQuestion,
 
-        catch (err) {
+        openReview,
 
-            console.log(err);
+        closeReview,
 
-            alert("Unable to start mock test.");
+        retryTest,
 
-        }
+        handleTimeUp,
 
-        finally {
-
-            setLoading(false);
-
-        }
-
-    };
-
-    /*
-    =====================================
-    Save Answer
-    =====================================
-    */
-
-    const handleAnswerSelect = (answer) => {
-
-        setAnswers(prev => ({
-
-            ...prev,
-
-            [currentQuestion]: answer
-
-        }));
-
-    };
-
-    /*
-    =====================================
-    Previous Question
-    =====================================
-    */
-
-    const previousQuestion = () => {
-
-        if (currentQuestion > 0) {
-
-            setCurrentQuestion(prev => prev - 1);
-
-        }
-
-    };
-
-    /*
-    =====================================
-    Next Question
-    =====================================
-    */
-
-    const nextQuestion = () => {
-
-        if (
-
-            currentQuestion <
-
-            questions.length - 1
-
-        ) {
-
-            setCurrentQuestion(prev => prev + 1);
-
-        }
-
-        else {
-
-            setReviewMode(true);
-
-        }
-
-    };
-
-    /*
-    =====================================
-    Jump To Question
-    =====================================
-    */
-
-    const handleQuestionSelect = (index) => {
-
-        setCurrentQuestion(index);
-
-    };
-
-    /*
-    =====================================
-    Submit Test
-    =====================================
-    */
-
-    const handleSubmitTest = async () => {
-
-        if (submitted) {
-
-            return;
-
-        }
-
-        try {
-
-            setSubmitted(true);
-
-            const formattedAnswers = questions.map(
-
-                (question, index) => ({
-
-                    questionId: question._id,
-
-                    selectedAnswer:
-
-                        answers[index] || ""
-
-                })
-
-            );
-
-            const data = await submitTest(
-
-                testId,
-
-                formattedAnswers
-
-            );
-
-            setResult(data);
-
-            setStarted(false);
-
-            setReviewMode(false);
-
-        }
-
-        catch (err) {
-
-            console.log(err);
-
-            setSubmitted(false);
-
-            alert("Unable to submit test.");
-
-        }
-
-    };
-
-    /*
-    =====================================
-    Time Up
-    =====================================
-    */
-
-    const handleTimeUp = async () => {
-
-        setAutoSubmitted(true);
-
-        await handleSubmitTest();
-
-    };
-
-    /*
-    =====================================
-    Retry Test
-    =====================================
-    */
-
-    const retryTest = () => {
-
-        setStarted(false);
-
-        setLoading(false);
-
-        setSubmitted(false);
-
-        setAutoSubmitted(false);
-
-        setReviewMode(false);
-
-        setQuestions([]);
-
-        setAnswers({});
-
-        setCurrentQuestion(0);
-
-        setResult(null);
-
-        setTestId("");
-
-    };
-        /*
-    =====================================
-    UI
-    =====================================
-    */
+    } = actions;
 
     return (
 
@@ -286,11 +85,11 @@ function MockTest() {
 
                     totalQuestions={questions.length || 10}
 
-                    duration={20}
+                    duration={duration}
 
                     started={started}
 
-                    onStart={handleStartTest}
+                    onStart={startTest}
 
                 />
 
@@ -301,6 +100,20 @@ function MockTest() {
                         <div className="alert alert-info">
 
                             Starting Mock Test...
+
+                        </div>
+
+                    )
+
+                }
+
+                {
+
+                    submitting && (
+
+                        <div className="alert alert-secondary">
+
+                            Submitting your test...
 
                         </div>
 
@@ -336,11 +149,13 @@ function MockTest() {
 
                     )
 
-                }
+                }                {
 
-                {
+                    started &&
 
-                    started && !result && !reviewMode && (
+                    !result &&
+
+                    !reviewMode && (
 
                         <div className="row">
 
@@ -348,7 +163,7 @@ function MockTest() {
 
                                 <Timer
 
-                                    duration={20}
+                                    duration={duration}
 
                                     onTimeUp={handleTimeUp}
 
@@ -356,11 +171,7 @@ function MockTest() {
 
                                 <QuestionCard
 
-                                    question={
-
-                                        questions[currentQuestion]
-
-                                    }
+                                    question={currentQuestionData}
 
                                     currentQuestion={
 
@@ -376,13 +187,13 @@ function MockTest() {
 
                                     selectedAnswer={
 
-                                        answers[currentQuestion]
+                                        selectedAnswer
 
                                     }
 
                                     onAnswerSelect={
 
-                                        handleAnswerSelect
+                                        selectAnswer
 
                                     }
 
@@ -440,7 +251,7 @@ function MockTest() {
 
                                     onQuestionSelect={
 
-                                        handleQuestionSelect
+                                        jumpToQuestion
 
                                     }
 
@@ -450,11 +261,7 @@ function MockTest() {
 
                                     className="btn btn-danger w-100 mt-4"
 
-                                    onClick={() =>
-
-                                        setReviewMode(true)
-
-                                    }
+                                    onClick={openReview}
 
                                 >
 
@@ -472,29 +279,31 @@ function MockTest() {
 
                 {
 
-                    started && reviewMode && !result && (
+                    started &&
+
+                    reviewMode &&
+
+                    !result && (
 
                         <ReviewScreen
 
                             exam={exam}
 
-                            totalQuestions={questions.length}
+                            totalQuestions={
 
-                            answers={answers}
-
-                            onBack={() =>
-
-                                setReviewMode(false)
+                                questions.length
 
                             }
 
-                            onSubmit={handleSubmitTest}
+                            answers={answers}                            onBack={closeReview}
+
+                            onSubmit={submitTest}
 
                             onQuestionSelect={(index) => {
 
-                                setCurrentQuestion(index);
+                                jumpToQuestion(index);
 
-                                setReviewMode(false);
+                                closeReview();
 
                             }}
 
@@ -503,7 +312,6 @@ function MockTest() {
                     )
 
                 }
-                                
 
             </div>
 

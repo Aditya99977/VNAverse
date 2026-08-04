@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import DashboardLayout from "../components/DashboardLayout";
 import WelcomeCard from "../components/WelcomeCard";
 import StatCard from "../components/StatCard";
@@ -8,59 +6,31 @@ import PerformanceChart from "../components/PerformanceChart";
 import RecentTests from "../components/RecentTests";
 import QuickActions from "../components/QuickActions";
 
-import { getDashboard } from "../services/dashboardService";
+import useDashboard from "../hooks/useDashboard";
 
 import {
     FaBook,
     FaClipboardList,
     FaChartLine,
-    FaTrophy
+    FaTrophy,
 } from "react-icons/fa";
 
 function StudentDashboard() {
-
-    const [dashboard, setDashboard] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-
-        const fetchDashboard = async () => {
-
-        try {
-
-            const response = await getDashboard();
-
-            setDashboard(response);
-
-        } catch (err) {
-
-            console.error("Dashboard Error:", err);
-
-        } finally {
-
-            setLoading(false);
-
-        }
-
-        };
-
-        fetchDashboard();
-
-    }, []);
+    const {
+        dashboard,
+        loading,
+        error,
+    } = useDashboard();
 
     if (loading) {
-
         return (
-
             <DashboardLayout>
-
                 <div
                     className="d-flex flex-column justify-content-center align-items-center"
                     style={{
                         minHeight: "70vh",
                     }}
                 >
-
                     <div
                         className="spinner-border text-primary"
                         style={{
@@ -78,31 +48,41 @@ function StudentDashboard() {
                     >
                         Loading your dashboard...
                     </p>
-
                 </div>
-
             </DashboardLayout>
-
         );
+    }
 
+    if (error) {
+        return (
+            <DashboardLayout>
+                <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{
+                        minHeight: "70vh",
+                    }}
+                >
+                    <div
+                        className="alert alert-danger"
+                        style={{
+                            maxWidth: "500px",
+                            width: "100%",
+                        }}
+                    >
+                        {error}
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
     }
 
     return (
-
         <DashboardLayout>
-
             <div className="container-fluid px-0">
 
-                {/* Welcome */}
-
-                <WelcomeCard
-                    user={dashboard?.user}
-                />
-
-                {/* Stats */}
+                <WelcomeCard user={dashboard?.user} />
 
                 <div className="row g-4 mt-1">
-
                     <StatCard
                         title="Practice Questions"
                         value={dashboard?.stats?.practiceQuestions ?? 0}
@@ -134,57 +114,37 @@ function StudentDashboard() {
                         icon={<FaTrophy />}
                         color="#3B82F6"
                     />
-
                 </div>
 
-                {/* Analytics */}
-
                 <div className="row g-4 mt-1">
-
                     <div className="col-lg-5">
-
                         <SubjectProgress
                             data={dashboard?.subjectProgress || []}
                         />
-
                     </div>
 
                     <div className="col-lg-7">
-
                         <PerformanceChart
                             data={dashboard?.weeklyPerformance || []}
                         />
-
                     </div>
-
                 </div>
 
-                {/* Bottom Section */}
-
                 <div className="row g-4 mt-1 mb-4">
-
                     <div className="col-lg-8">
-
                         <RecentTests
                             tests={dashboard?.recentTests || []}
                         />
-
                     </div>
 
                     <div className="col-lg-4">
-
                         <QuickActions />
-
                     </div>
-
                 </div>
 
             </div>
-
         </DashboardLayout>
-
     );
-
 }
 
 export default StudentDashboard;

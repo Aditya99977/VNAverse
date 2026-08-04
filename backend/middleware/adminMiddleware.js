@@ -1,42 +1,27 @@
-const User = require("../models/User");
+const AppError = require("../utils/AppError");
 
-const adminMiddleware = async (req, res, next) => {
-    try {
-        // Fetch only required fields
-        const user = await User.findById(req.user.id).select("role status");
+const adminMiddleware = (req, res, next) => {
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found.",
-            });
-        }
+    if (!req.user) {
 
-        // Future-ready account status check
-        if (user.status && user.status !== "active") {
-            return res.status(403).json({
-                success: false,
-                message: "Your account has been suspended.",
-            });
-        }
+        throw new AppError(
+            "Unauthorized.",
+            401
+        );
 
-        // Admin role check
-        if (user.role !== "admin") {
-            return res.status(403).json({
-                success: false,
-                message: "Access denied. Admin privileges required.",
-            });
-        }
-
-        next();
-    } catch (error) {
-        console.error("Admin Middleware Error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error.",
-        });
     }
+
+    if (req.user.role !== "admin") {
+
+        throw new AppError(
+            "Access denied. Admin only.",
+            403
+        );
+
+    }
+
+    next();
+
 };
 
 module.exports = adminMiddleware;

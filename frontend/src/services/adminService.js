@@ -7,7 +7,10 @@ Dashboard
 */
 
 export const getAdminDashboard = async () => {
-    const { data } = await api.get("/admin/dashboard");
+    const { data } = await api.get(
+        "/admin/dashboard"
+    );
+
     return data;
 };
 
@@ -18,17 +21,30 @@ Users
 */
 
 export const getAllUsers = async () => {
-    const { data } = await api.get("/admin/users");
+    const { data } = await api.get(
+        "/admin/users"
+    );
+
     return data;
 };
 
-export const getUserDetails = async (userId) => {
-    const { data } = await api.get(`/admin/users/${userId}`);
+export const getUserDetails = async (
+    userId
+) => {
+    const { data } = await api.get(
+        `/admin/users/${userId}`
+    );
+
     return data;
 };
 
-export const deleteUser = async (userId) => {
-    const { data } = await api.delete(`/admin/users/${userId}`);
+export const deleteUser = async (
+    userId
+) => {
+    const { data } = await api.delete(
+        `/admin/users/${userId}`
+    );
+
     return data;
 };
 
@@ -39,11 +55,16 @@ Questions
 */
 
 export const getAllQuestions = async () => {
-    const { data } = await api.get("/admin/questions");
+    const { data } = await api.get(
+        "/admin/questions"
+    );
+
     return data;
 };
 
-export const addQuestion = async (questionData) => {
+export const addQuestion = async (
+    questionData
+) => {
     const { data } = await api.post(
         "/questions",
         questionData
@@ -57,16 +78,18 @@ export const updateQuestion = async (
     questionData
 ) => {
     const { data } = await api.put(
-        `/admin/question/${questionId}`,
+        `/questions/${questionId}`,
         questionData
     );
 
     return data;
 };
 
-export const deleteQuestion = async (questionId) => {
+export const deleteQuestion = async (
+    questionId
+) => {
     const { data } = await api.delete(
-        `/admin/question/${questionId}`
+        `/questions/${questionId}`
     );
 
     return data;
@@ -85,7 +108,6 @@ export const uploadCSV = async (
     const formData = new FormData();
 
     formData.append("file", file);
-
     formData.append("examId", examId);
 
     const { data } = await api.post(
@@ -93,7 +115,8 @@ export const uploadCSV = async (
         formData,
         {
             headers: {
-                "Content-Type": "multipart/form-data",
+                "Content-Type":
+                    "multipart/form-data",
             },
         }
     );

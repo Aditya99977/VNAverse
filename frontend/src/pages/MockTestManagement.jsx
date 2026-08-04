@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+
 import MainLayout from "../layouts/MainLayout";
 
 import MockTestTable from "../components/admin/MockTestTable";
 import MockTestForm from "../components/admin/MockTestForm";
 import DeleteMockTestModal from "../components/admin/DeleteMockTestModal";
 import CsvUploadModal from "../components/admin/CsvUploadModal";
+import MockTestStats from "../components/admin/MockTestStats";
 
 import {
     getMockTests,
@@ -12,7 +15,7 @@ import {
     updateMockTest,
     deleteMockTest,
     toggleMockTestStatus,
-    getMockTestStatistics
+    getMockTestStatistics,
 } from "../services/mockTestService";
 
 import { uploadCSV } from "../services/adminService";
@@ -25,11 +28,13 @@ function MockTestManagement() {
     =====================================
     */
 
+    const [loading, setLoading] = useState(true);
+
+    const [uploadingCSV, setUploadingCSV] = useState(false);
+
     const [mockTests, setMockTests] = useState([]);
 
     const [statistics, setStatistics] = useState(null);
-
-    const [loading, setLoading] = useState(true);
 
     const [selectedTest, setSelectedTest] = useState(null);
 
@@ -37,11 +42,11 @@ function MockTestManagement() {
 
     const [showForm, setShowForm] = useState(false);
 
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] =
+        useState(false);
 
-    const [showCsvModal, setShowCsvModal] = useState(false);
-
-    const [uploadingCSV, setUploadingCSV] = useState(false);
+    const [showCsvModal, setShowCsvModal] =
+        useState(false);
 
     /*
     =====================================
@@ -67,25 +72,45 @@ function MockTestManagement() {
 
             setLoading(true);
 
-            const [tests, stats] = await Promise.all([
+            const [
+
+                testsResponse,
+
+                statisticsResponse,
+
+            ] = await Promise.all([
 
                 getMockTests(),
 
-                getMockTestStatistics()
+                getMockTestStatistics(),
 
             ]);
 
-            setMockTests(tests.data);
+            setMockTests(
 
-            setStatistics(stats.data);
+                testsResponse.data || []
+
+            );
+
+            setStatistics(
+
+                statisticsResponse.data || null
+
+            );
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(error);
 
-            alert("Unable to load mock tests.");
+            toast.error(
+
+                error?.response?.data?.message ||
+
+                "Unable to load mock tests."
+
+            );
 
         }
 
@@ -103,7 +128,11 @@ function MockTestManagement() {
     =====================================
     */
 
-    const handleSaveMockTest = async (formData) => {
+    const handleSaveMockTest = async (
+
+        formData
+
+    ) => {
 
         try {
 
@@ -117,15 +146,27 @@ function MockTestManagement() {
 
                 );
 
-                alert("Mock Test updated successfully.");
+                toast.success(
+
+                    "Mock Test updated successfully."
+
+                );
 
             }
 
             else {
 
-                await createMockTest(formData);
+                await createMockTest(
 
-                alert("Mock Test created successfully.");
+                    formData
+
+                );
+
+                toast.success(
+
+                    "Mock Test created successfully."
+
+                );
 
             }
 
@@ -137,13 +178,13 @@ function MockTestManagement() {
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(error);
 
-            alert(
+            toast.error(
 
-                err.response?.data?.message ||
+                error?.response?.data?.message ||
 
                 "Unable to save mock test."
 
@@ -151,9 +192,7 @@ function MockTestManagement() {
 
         }
 
-    };
-
-    /*
+    };    /*
     =====================================
     Edit Mock Test
     =====================================
@@ -169,7 +208,7 @@ function MockTestManagement() {
 
     /*
     =====================================
-    Delete Click
+    Delete Mock Test
     =====================================
     */
 
@@ -193,7 +232,11 @@ function MockTestManagement() {
 
             await deleteMockTest(id);
 
-            alert("Mock Test deleted successfully.");
+            toast.success(
+
+                "Mock Test deleted successfully."
+
+            );
 
             setShowDeleteModal(false);
 
@@ -203,11 +246,17 @@ function MockTestManagement() {
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(error);
 
-            alert("Unable to delete mock test.");
+            toast.error(
+
+                error?.response?.data?.message ||
+
+                "Unable to delete mock test."
+
+            );
 
         }
 
@@ -225,15 +274,27 @@ function MockTestManagement() {
 
             await toggleMockTestStatus(id);
 
+            toast.success(
+
+                "Mock Test status updated."
+
+            );
+
             await loadMockTests();
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(error);
 
-            alert("Unable to update status.");
+            toast.error(
+
+                error?.response?.data?.message ||
+
+                "Unable to update status."
+
+            );
 
         }
 
@@ -251,9 +312,15 @@ function MockTestManagement() {
 
             setUploadingCSV(true);
 
-            const data = await uploadCSV(file);
+            const response = await uploadCSV(file);
 
-            alert(data.message);
+            toast.success(
+
+                response.message ||
+
+                "CSV uploaded successfully."
+
+            );
 
             setShowCsvModal(false);
 
@@ -261,15 +328,15 @@ function MockTestManagement() {
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(error);
 
-            alert(
+            toast.error(
 
-                err.response?.data?.message ||
+                error?.response?.data?.message ||
 
-                "CSV Upload Failed."
+                "CSV upload failed."
 
             );
 
@@ -281,8 +348,7 @@ function MockTestManagement() {
 
         }
 
-    };
-        /*
+    };    /*
     =====================================
     Loading Screen
     =====================================
@@ -294,9 +360,35 @@ function MockTestManagement() {
 
             <MainLayout>
 
-                <div className="container py-5 text-center">
+                <div className="container-fluid py-4">
 
-                    <h3>Loading Mock Tests...</h3>
+                    <div
+                        className="rounded-4 p-5 text-center"
+                        style={{
+                            background: "#131D31",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+                        }}
+                    >
+
+                        <div
+                            className="spinner-border text-primary mb-4"
+                            role="status"
+                        />
+
+                        <h3 className="text-white fw-bold">
+
+                            Loading Mock Tests...
+
+                        </h3>
+
+                        <p className="text-secondary mb-0">
+
+                            Please wait while we fetch all mock tests.
+
+                        </p>
+
+                    </div>
 
                 </div>
 
@@ -312,24 +404,33 @@ function MockTestManagement() {
 
             <div className="container-fluid py-4">
 
-                {/* ===============================
-                    Page Header
-                =============================== */}
+                {/* ======================================
+                    Header
+                ====================================== */}
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
-
-                    <h2 className="fw-bold">
-
-                        📚 Mock Test Management
-
-                    </h2>
+                <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
 
                     <div>
 
+                        <h2 className="fw-bold text-white mb-2">
+
+                            📝 Mock Test Management
+
+                        </h2>
+
+                        <p className="text-secondary mb-0">
+
+                            Create, manage and publish mock tests
+                            available for students.
+
+                        </p>
+
+                    </div>
+
+                    <div className="d-flex gap-2">
+
                         <button
-
-                            className="btn btn-success me-2"
-
+                            className="btn btn-primary px-4"
                             onClick={() => {
 
                                 setEditingTest(null);
@@ -337,7 +438,6 @@ function MockTestManagement() {
                                 setShowForm(true);
 
                             }}
-
                         >
 
                             ➕ Create Mock Test
@@ -345,15 +445,10 @@ function MockTestManagement() {
                         </button>
 
                         <button
-
-                            className="btn btn-primary"
-
+                            className="btn btn-outline-primary px-4"
                             onClick={() =>
-
                                 setShowCsvModal(true)
-
                             }
-
                         >
 
                             📤 Bulk CSV Upload
@@ -364,157 +459,73 @@ function MockTestManagement() {
 
                 </div>
 
-                {/* ===============================
-                    Statistics Cards
-                =============================== */}
+                {/* ======================================
+                    Statistics
+                ====================================== */}
 
                 {
 
                     statistics && (
 
-                        <div className="row mb-4">
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Total Tests</h6>
-
-                                        <h3>
-
-                                            {statistics.total}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Published</h6>
-
-                                        <h3 className="text-success">
-
-                                            {statistics.published}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Draft</h6>
-
-                                        <h3 className="text-warning">
-
-                                            {statistics.draft}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>
-
-                                            Avg Questions
-
-                                        </h6>
-
-                                        <h3>
-
-                                            {
-
-                                                statistics.averageQuestions
-
-                                            }
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
+                        <MockTestStats
+                            statistics={statistics}
+                        />
 
                     )
 
                 }
 
-                {/* ===============================
-                    Mock Test Table
-                =============================== */}
+                {/* ======================================
+                    Table
+                ====================================== */}
 
                 <MockTestTable
 
                     mockTests={mockTests}
 
+                    loading={loading}
+
                     onEdit={handleEdit}
 
                     onDelete={handleDelete}
 
-                    onToggleStatus={handleToggleStatus}
+                    onToggleStatus={
+                        handleToggleStatus
+                    }
 
-                />
-
-                {/* ===============================
-                    Create / Edit Modal
-                =============================== */}
+                />                {/* ======================================
+                    Create / Edit Mock Test
+                ====================================== */}
 
                 {
 
                     showForm && (
 
                         <div
-
                             className="modal fade show"
-
                             style={{
-
                                 display: "block",
-
                                 backgroundColor:
-
-                                    "rgba(0,0,0,0.5)"
-
+                                    "rgba(0,0,0,.60)",
                             }}
-
                         >
 
-                            <div className="modal-dialog modal-xl">
+                            <div className="modal-dialog modal-xl modal-dialog-centered">
 
-                                <div className="modal-content">
+                                <div
+                                    className="modal-content border-0"
+                                    style={{
+                                        background: "#131D31",
+                                        border:
+                                            "1px solid rgba(255,255,255,.08)",
+                                    }}
+                                >
 
-                                    <div className="modal-header">
+                                    <div
+                                        className="modal-header border-secondary"
+                                    >
 
-                                        <h5>
+                                        <h5 className="text-white fw-bold mb-0">
 
                                             {
 
@@ -529,9 +540,7 @@ function MockTestManagement() {
                                         </h5>
 
                                         <button
-
-                                            className="btn-close"
-
+                                            className="btn-close btn-close-white"
                                             onClick={() => {
 
                                                 setShowForm(false);
@@ -539,7 +548,6 @@ function MockTestManagement() {
                                                 setEditingTest(null);
 
                                             }}
-
                                         />
 
                                     </div>
@@ -548,14 +556,17 @@ function MockTestManagement() {
 
                                         <MockTestForm
 
-                                            key={editingTest?._id || "new-mock-test"}
+                                            key={
+                                                editingTest?._id ||
+                                                "new-mock-test"
+                                            }
 
-                                            selectedTest={editingTest}
+                                            selectedTest={
+                                                editingTest
+                                            }
 
                                             onSubmit={
-
                                                 handleSaveMockTest
-
                                             }
 
                                             onCancel={() => {
@@ -579,25 +590,35 @@ function MockTestManagement() {
                     )
 
                 }
-                                {/* ===============================
-                    Delete Mock Test Modal
-                =============================== */}
+
+                {/* ======================================
+                    Delete Modal
+                ====================================== */}
 
                 <DeleteMockTestModal
+
                     show={showDeleteModal}
+
                     mockTest={selectedTest}
+
                     onClose={() => {
+
                         setShowDeleteModal(false);
+
                         setSelectedTest(null);
+
                     }}
+
                     onConfirm={confirmDelete}
+
                 />
 
-                {/* ===============================
+                {/* ======================================
                     CSV Upload Modal
-                =============================== */}
+                ====================================== */}
 
                 {
+
                     showCsvModal && (
 
                         <CsvUploadModal
@@ -607,12 +628,15 @@ function MockTestManagement() {
                             onUpload={handleUploadCSV}
 
                             onClose={() =>
+
                                 setShowCsvModal(false)
+
                             }
 
                         />
 
                     )
+
                 }
 
             </div>

@@ -3,304 +3,459 @@ const mongoose = require("mongoose");
 const Subject = require("../models/Subject");
 const User = require("../models/User");
 
+const asyncHandler = require("../utils/asyncHandler");
+const ApiResponse = require("../utils/ApiResponse");
+
 /*
-=========================================
-@Get Recommended Subjects
-@Route GET /api/subjects/recommended
-@Access Private
-=========================================
+==================================================
+Get Recommended Subjects
+==================================================
 */
-const getRecommendedSubjects = async (req, res) => {
-  try {
+
+exports.getRecommendedSubjects = asyncHandler(async (req, res) => {
+
     const user = await User.findById(req.user.id)
-      .populate("preferredExam", "name slug category")
-      .lean();
+        .populate("preferredExam", "name slug category")
+        .lean();
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
+
+        return res.status(404).json(
+
+            ApiResponse.error(
+                "User not found."
+            )
+
+        );
+
     }
 
     if (!user.preferredExam) {
-      return res.status(400).json({
-        success: false,
-        message: "No preferred exam selected.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+                "No preferred exam selected."
+            )
+
+        );
+
     }
 
     const subjects = await Subject.find({
-      exam: user.preferredExam._id,
-      isActive: true,
+
+        exam: user.preferredExam._id,
+
+        isActive: true,
+
     })
-      .select("name slug description icon color order")
-      .sort({ order: 1 })
-      .lean();
 
-    return res.status(200).json({
-      success: true,
-      exam: user.preferredExam,
-      count: subjects.length,
-      subjects,
-    });
-  } catch (error) {
-    console.error("Get Recommended Subjects Error:", error);
+        .select("name slug description icon color order")
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+        .sort({
+
+            order: 1,
+
+        })
+
+        .lean();
+
+    return res.status(200).json(
+
+        ApiResponse.success(
+
+            "Recommended subjects fetched successfully.",
+
+            {
+
+                exam: user.preferredExam,
+
+                count: subjects.length,
+
+                subjects,
+
+            }
+
+        )
+
+    );
+
+});
 
 /*
-=========================================
-@Get Subjects By Exam
-@Route GET /api/subjects/exam/:examId
-@Access Private
-=========================================
+==================================================
+Get Subjects By Exam
+==================================================
 */
-const getSubjectsByExam = async (req, res) => {
-  try {
+
+exports.getSubjectsByExam = asyncHandler(async (req, res) => {
+
     const { examId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(examId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid exam id.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+                "Invalid exam id."
+            )
+
+        );
+
     }
 
     const subjects = await Subject.find({
-      exam: examId,
-      isActive: true,
+
+        exam: examId,
+
+        isActive: true,
+
     })
-      .populate("exam", "name slug category")
-      .select("name slug description icon color order exam")
-      .sort({ order: 1 })
-      .lean();
 
-    return res.status(200).json({
-      success: true,
-      count: subjects.length,
-      subjects,
-    });
-  } catch (error) {
-    console.error("Get Subjects By Exam Error:", error);
+        .populate("exam", "name slug category")
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+        .select("name slug description icon color order exam")
+
+        .sort({
+
+            order: 1,
+
+        })
+
+        .lean();
+
+    return res.status(200).json(
+
+        ApiResponse.success(
+
+            "Subjects fetched successfully.",
+
+            {
+
+                count: subjects.length,
+
+                subjects,
+
+            }
+
+        )
+
+    );
+
+});
 
 /*
-=========================================
-@Create Subject
-@Route POST /api/subjects
-@Access Admin
-=========================================
+==================================================
+Create Subject
+==================================================
 */
-const createSubject = async (req, res) => {
-  try {
+
+exports.createSubject = asyncHandler(async (req, res) => {
+
     const {
-      name,
-      slug,
-      exam,
-      description,
-      icon,
-      color,
-      order,
+
+        name,
+
+        slug,
+
+        exam,
+
+        description,
+
+        icon,
+
+        color,
+
+        order,
+
     } = req.body;
 
-    // Required field validation
     if (!name || !slug || !exam) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, slug and exam are required.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+
+                "Name, slug and exam are required."
+
+            )
+
+        );
+
     }
 
-    // Validate exam id
     if (!mongoose.Types.ObjectId.isValid(exam)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid exam id.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+                "Invalid exam id."
+            )
+
+        );
+
     }
 
-    // Check duplicate subject in same exam
     const existingSubject = await Subject.findOne({
-      exam,
-      slug: slug.trim().toLowerCase(),
+
+        exam,
+
+        slug: slug.trim().toLowerCase(),
+
     });
 
     if (existingSubject) {
-      return res.status(409).json({
-        success: false,
-        message: "Subject already exists for this exam.",
-      });
+
+        return res.status(409).json(
+
+            ApiResponse.error(
+
+                "Subject already exists for this exam."
+
+            )
+
+        );
+
     }
 
     const subject = await Subject.create({
-      name: name.trim(),
-      slug: slug.trim().toLowerCase(),
-      exam,
-      description: description?.trim() || "",
-      icon: icon?.trim() || "book",
-      color: color?.trim() || "#2563EB",
-      order: order || 1,
+
+        name: name.trim(),
+
+        slug: slug.trim().toLowerCase(),
+
+        exam,
+
+        description: description?.trim() || "",
+
+        icon: icon?.trim() || "book",
+
+        color: color?.trim() || "#2563EB",
+
+        order: order || 1,
+
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "Subject created successfully.",
-      subject,
-    });
-  } catch (error) {
-    console.error("Create Subject Error:", error);
+    return res.status(201).json(
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+        ApiResponse.success(
+
+            "Subject created successfully.",
+
+            subject
+
+        )
+
+    );
+
+});
+
 /*
-=========================================
-@Get All Subjects
-@Route GET /api/subjects
-@Access Admin
-=========================================
+==================================================
+Get All Subjects
+==================================================
 */
-const getAllSubjects = async (req, res) => {
-  try {
+
+exports.getAllSubjects = asyncHandler(async (req, res) => {
+
     const subjects = await Subject.find()
-      .populate("exam", "name slug category")
-      .sort({
-        createdAt: -1,
-      })
-      .lean();
 
-    return res.status(200).json({
-      success: true,
-      count: subjects.length,
-      subjects,
-    });
-  } catch (error) {
-    console.error("Get All Subjects Error:", error);
+        .populate("exam", "name slug category")
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+        .sort({
+
+            createdAt: -1,
+
+        })
+
+        .lean();
+
+    return res.status(200).json(
+
+        ApiResponse.success(
+
+            "Subjects fetched successfully.",
+
+            {
+
+                count: subjects.length,
+
+                subjects,
+
+            }
+
+        )
+
+    );
+
+});
+
 /*
-=========================================
-@Get Subject By ID
-@Route GET /api/subjects/:id
-@Access Admin
-=========================================
+==================================================
+Get Subject By ID
+==================================================
 */
-const getSubjectById = async (req, res) => {
-  try {
+
+exports.getSubjectById = asyncHandler(async (req, res) => {
+
     const { id } = req.params;
 
-    // Validate Subject ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid subject id.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+
+                "Invalid subject id."
+
+            )
+
+        );
+
     }
 
     const subject = await Subject.findById(id)
-      .populate("exam", "name slug category")
-      .lean();
+
+        .populate("exam", "name slug category")
+
+        .lean();
 
     if (!subject) {
-      return res.status(404).json({
-        success: false,
-        message: "Subject not found.",
-      });
+
+        return res.status(404).json(
+
+            ApiResponse.error(
+
+                "Subject not found."
+
+            )
+
+        );
+
     }
 
-    return res.status(200).json({
-      success: true,
-      subject,
-    });
-  } catch (error) {
-    console.error("Get Subject By ID Error:", error);
+    return res.status(200).json(
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+        ApiResponse.success(
+
+            "Subject fetched successfully.",
+
+            subject
+
+        )
+
+    );
+
+});
+
 /*
-=========================================
-@Update Subject
-@Route PUT /api/subjects/:id
-@Access Admin
-=========================================
+==================================================
+Update Subject
+==================================================
 */
-const updateSubject = async (req, res) => {
-  try {
+
+exports.updateSubject = asyncHandler(async (req, res) => {
+
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid subject id.",
-      });
-    }
 
-    const {
-      name,
-      slug,
-      exam,
-      description,
-      icon,
-      color,
-      order,
-      isActive,
-    } = req.body;
+        return res.status(400).json(
+
+            ApiResponse.error(
+
+                "Invalid subject id."
+
+            )
+
+        );
+
+    }
 
     const subject = await Subject.findById(id);
 
     if (!subject) {
-      return res.status(404).json({
-        success: false,
-        message: "Subject not found.",
-      });
+
+        return res.status(404).json(
+
+            ApiResponse.error(
+
+                "Subject not found."
+
+            )
+
+        );
+
     }
 
-    // Validate Exam ID if provided
+    const {
+
+        name,
+
+        slug,
+
+        exam,
+
+        description,
+
+        icon,
+
+        color,
+
+        order,
+
+        isActive,
+
+    } = req.body;
+
     if (exam && !mongoose.Types.ObjectId.isValid(exam)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid exam id.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+
+                "Invalid exam id."
+
+            )
+
+        );
+
     }
 
-    // Check duplicate slug within the same exam
     if (slug || exam) {
-      const duplicate = await Subject.findOne({
-        _id: { $ne: id },
-        exam: exam || subject.exam,
-        slug: (slug || subject.slug).trim().toLowerCase(),
-      });
 
-      if (duplicate) {
-        return res.status(409).json({
-          success: false,
-          message: "Another subject with this slug already exists for this exam.",
+        const duplicate = await Subject.findOne({
+
+            _id: {
+
+                $ne: id,
+
+            },
+
+            exam: exam || subject.exam,
+
+            slug: (slug || subject.slug)
+
+                .trim()
+
+                .toLowerCase(),
+
         });
-      }
+
+        if (duplicate) {
+
+            return res.status(409).json(
+
+                ApiResponse.error(
+
+                    "Another subject with this slug already exists for this exam."
+
+                )
+
+            );
+
+        }
+
     }
 
     subject.name = name?.trim() ?? subject.name;
@@ -312,77 +467,79 @@ const updateSubject = async (req, res) => {
     subject.order = order ?? subject.order;
 
     if (typeof isActive === "boolean") {
-      subject.isActive = isActive;
+
+        subject.isActive = isActive;
+
     }
 
     await subject.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "Subject updated successfully.",
-      subject,
-    });
-  } catch (error) {
-    console.error("Update Subject Error:", error);
+    return res.status(200).json(
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
+        ApiResponse.success(
+
+            "Subject updated successfully.",
+
+            subject
+
+        )
+
+    );
+
+});
+
 /*
-=========================================
-@Delete Subject (Soft Delete)
-@Route DELETE /api/subjects/:id
-@Access Admin
-=========================================
+==================================================
+Delete Subject
+==================================================
 */
-const deleteSubject = async (req, res) => {
-  try {
+
+exports.deleteSubject = asyncHandler(async (req, res) => {
+
     const { id } = req.params;
 
-    // Validate Subject ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid subject id.",
-      });
+
+        return res.status(400).json(
+
+            ApiResponse.error(
+
+                "Invalid subject id."
+
+            )
+
+        );
+
     }
 
     const subject = await Subject.findById(id);
 
     if (!subject) {
-      return res.status(404).json({
-        success: false,
-        message: "Subject not found.",
-      });
+
+        return res.status(404).json(
+
+            ApiResponse.error(
+
+                "Subject not found."
+
+            )
+
+        );
+
     }
 
-    // Soft Delete
     subject.isActive = false;
 
     await subject.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "Subject deleted successfully.",
-    });
-  } catch (error) {
-    console.error("Delete Subject Error:", error);
+    return res.status(200).json(
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
-module.exports = {
-  getRecommendedSubjects,
-  getSubjectsByExam,
-  createSubject,
-  getAllSubjects,
-  getSubjectById,
-  updateSubject,
-  deleteSubject,
-};
+        ApiResponse.success(
+
+            "Subject deleted successfully."
+
+        )
+
+    );
+
+});

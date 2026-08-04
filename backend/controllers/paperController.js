@@ -1,291 +1,451 @@
-const fs = require("fs");
-const path = require("path");
-const Paper = require("../models/paper");
+const asyncHandler = require("../utils/asyncHandler");
 
+const ApiResponse = require("../utils/ApiResponse");
 
-// ==========================================
-// Upload Paper
-// ==========================================
+const paperService = require("../services/paperService");
 
-exports.uploadPaper = async (req, res) => {
-  try {
-    const {
-      title,
-      exam,
-      subject,
-      year,
-      description,
-      status,
-    } = req.body;
+/*
+==================================================
+Student APIs
+==================================================
+*/
 
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "PDF file is required.",
-      });
-    }
+/*
+==================================================
+Get All Previous Papers
+==================================================
+*/
 
-    const paper = await Paper.create({
-      title,
-      exam,
-      subject,
-      year,
-      description,
-      status,
-      pdfUrl: `/uploads/papers/${req.file.filename}`,
-      uploadedBy: req.user.id,
-    });
+exports.getAllPapers = asyncHandler(async (req, res) => {
 
-    res.status(201).json({
-      success: true,
-      message: "Paper uploaded successfully.",
-      paper,
-    });
+    const papers =
+        await paperService.getAllPapers(
+            req.query
+        );
 
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+    res.status(200).json(
 
+        ApiResponse.success(
 
-// ==========================================
-// Get All Papers
-// ==========================================
+            "Previous papers fetched successfully.",
 
-exports.getAllPapers = async (req, res) => {
-  try {
+            papers
 
-    const papers = await Paper.find()
-      .populate("uploadedBy", "name email")
-      .sort({ createdAt: -1 });
+        )
 
-    res.json({
-      success: true,
-      count: papers.length,
-      papers,
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// ==========================================
-// Get Single Paper
-// ==========================================
-
-exports.getPaperById = async (req, res) => {
-  try {
-
-    const paper = await Paper.findById(req.params.id)
-      .populate("uploadedBy", "name email");
-
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: "Paper not found.",
-      });
-    }
-
-    res.json({
-      success: true,
-      paper,
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-
-  }
-};
-
-
-// ==========================================
-// Update Paper
-// ==========================================
-
-exports.updatePaper = async (req, res) => {
-  try {
-
-    const updates = { ...req.body };
-
-    if (req.file) {
-      updates.pdfUrl = `/uploads/papers/${req.file.filename}`;
-    }
-
-    const paper = await Paper.findByIdAndUpdate(
-      req.params.id,
-      updates,
-      {
-        new: true,
-        runValidators: true,
-      }
     );
 
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: "Paper not found.",
-      });
-    }
+});
 
-    res.json({
-      success: true,
-      message: "Paper updated successfully.",
-      paper,
-    });
+/*
+==================================================
+Get Previous Paper By ID
+==================================================
+*/
 
-  } catch (error) {
+exports.getPaperById = asyncHandler(async (req, res) => {
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    const paper =
+        await paperService.getPaperById(
+            req.params.id
+        );
 
-  }
-};
+    res.status(200).json(
 
+        ApiResponse.success(
 
-// ==========================================
-// Delete Paper
-// ==========================================
+            "Previous paper fetched successfully.",
 
-exports.deletePaper = async (req, res) => {
-  try {
+            paper
 
-    const paper = await Paper.findById(req.params.id);
+        )
 
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: "Paper not found.",
-      });
-    }
-
-    const filePath = path.join(
-      __dirname,
-      "..",
-      paper.pdfUrl
     );
 
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+});
+/*
+==================================================
+Record Paper View
+==================================================
+*/
 
-    await paper.deleteOne();
+exports.recordView = asyncHandler(async (req, res) => {
 
-    res.json({
-      success: true,
-      message: "Paper deleted successfully.",
-    });
+    const paper =
+        await paperService.recordView(
+            req.params.id
+        );
 
-  } catch (error) {
+    res.status(200).json(
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+        ApiResponse.success(
 
-  }
-};
+            "Paper view recorded successfully.",
 
+            paper
 
-// ==========================================
-// Download Paper
-// ==========================================
+        )
 
-exports.downloadPaper = async (req, res) => {
-  try {
-
-    const paper = await Paper.findById(req.params.id);
-
-    if (!paper) {
-      return res.status(404).json({
-        success: false,
-        message: "Paper not found.",
-      });
-    }
-
-    paper.downloads += 1;
-    await paper.save();
-
-    const filePath = path.join(
-      __dirname,
-      "..",
-      paper.pdfUrl
     );
 
-    res.download(filePath);
+});
 
-  } catch (error) {
+/*
+==================================================
+Record Paper Download
+==================================================
+*/
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+exports.recordDownload = asyncHandler(async (req, res) => {
 
-  }
-};
+    const paper =
+        await paperService.recordDownload(
+            req.params.id
+        );
 
+    res.status(200).json(
 
-// ==========================================
-// Statistics
-// ==========================================
+        ApiResponse.success(
 
-exports.getStatistics = async (req, res) => {
-  try {
+            "Paper download recorded successfully.",
 
-    const totalPapers = await Paper.countDocuments();
+            paper
 
-    const published = await Paper.countDocuments({
-      status: "Published",
-    });
+        )
 
-    const draft = await Paper.countDocuments({
-      status: "Draft",
-    });
+    );
 
-    const totalDownloads = await Paper.aggregate([
-      {
-        $group: {
-          _id: null,
-          downloads: {
-            $sum: "$downloads",
-          },
-        },
-      },
-    ]);
+});
 
-    res.json({
-      success: true,
+/*
+==================================================
+Get Papers By Exam
+==================================================
+*/
 
-      statistics: {
-        totalPapers,
-        published,
-        draft,
-        totalDownloads:
-          totalDownloads.length > 0
-            ? totalDownloads[0].downloads
-            : 0,
-      },
-    });
+exports.getPapersByExam = asyncHandler(async (req, res) => {
 
-  } catch (error) {
+    const papers =
+        await paperService.getPapersByExam(
+            req.params.examId
+        );
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(200).json(
 
-  }
-};
+        ApiResponse.success(
+
+            "Previous papers fetched successfully.",
+
+            papers
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Get Papers By Year
+==================================================
+*/
+
+exports.getPapersByYear = asyncHandler(async (req, res) => {
+
+    const papers =
+        await paperService.getPapersByYear(
+
+            req.params.examId,
+
+            req.params.year
+
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous papers fetched successfully.",
+
+            papers
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Admin APIs
+==================================================
+*/
+
+/*
+==================================================
+Create Previous Paper
+==================================================
+*/
+
+exports.createPaper = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.createPaper(
+            req.body
+        );
+
+    res.status(201).json(
+
+        ApiResponse.success(
+
+            "Previous paper created successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Update Previous Paper
+==================================================
+*/
+
+exports.updatePaper = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.updatePaper(
+
+            req.params.id,
+
+            req.body
+
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper updated successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Get All Previous Papers (Admin)
+==================================================
+*/
+
+exports.getAllPapersAdmin = asyncHandler(async (req, res) => {
+
+    const papers =
+        await paperService.getAllPapersAdmin(
+            req.query
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous papers fetched successfully.",
+
+            papers
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Get Previous Paper Details
+==================================================
+*/
+
+exports.getPaperDetails = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.getPaperDetails(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper fetched successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Publish Previous Paper
+==================================================
+*/
+
+exports.publishPaper = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.publishPaper(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper published successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Unpublish Previous Paper
+==================================================
+*/
+
+exports.unpublishPaper = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.unpublishPaper(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper unpublished successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Activate Previous Paper
+==================================================
+*/
+
+exports.activatePaper = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.activatePaper(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper activated successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Deactivate Previous Paper
+==================================================
+*/
+
+exports.deactivatePaper = asyncHandler(async (req, res) => {
+
+    const paper =
+        await paperService.deactivatePaper(
+            req.params.id
+        );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper deactivated successfully.",
+
+            paper
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Delete Previous Paper
+==================================================
+*/
+
+exports.deletePaper = asyncHandler(async (req, res) => {
+
+    await paperService.deletePaper(
+        req.params.id
+    );
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper deleted successfully."
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Previous Paper Statistics
+==================================================
+*/
+
+exports.getStatistics = asyncHandler(async (req, res) => {
+
+    const statistics =
+        await paperService.getStatistics();
+
+    res.status(200).json(
+
+        ApiResponse.success(
+
+            "Previous paper statistics fetched successfully.",
+
+            statistics
+
+        )
+
+    );
+
+});

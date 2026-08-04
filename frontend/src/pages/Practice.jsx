@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import DashboardLayout from "../components/DashboardLayout";
 
 import PracticeHero from "../components/practice/PracticeHero";
@@ -7,336 +5,175 @@ import PracticeFilters from "../components/practice/PracticeFilters";
 import QuestionCard from "../components/practice/QuestionCard";
 import ResultScreen from "../components/practice/ResultScreen";
 
-import { getPracticeQuestions } from "../services/practiceService";
+import usePractice from "../hooks/usePractice";
 
 function Practice() {
 
-    /* ========================================
-       STATES
-    ======================================== */
+    const {
 
-    const [subject, setSubject] = useState("");
+        filters,
 
-    const [difficulty, setDifficulty] = useState("");
+        session,
 
-    const [questions, setQuestions] = useState([]);
+        actions,
 
-    const [loading, setLoading] = useState(false);
+    } = usePractice();
 
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const {
 
-    const [selectedAnswer, setSelectedAnswer] = useState("");
+        subjects,
 
-    const [showResult, setShowResult] = useState(false);
+        subject,
 
-    const [score, setScore] = useState(0);
+        setSubject,
 
-    const [answered, setAnswered] = useState(false);
+        difficulty,
 
-    const [isCorrect, setIsCorrect] = useState(null);
+        setDifficulty,
 
-    const [completed, setCompleted] = useState(false);
+    } = filters;
 
-    /* ========================================
-       START PRACTICE
-    ======================================== */
-
-    const startPractice = async () => {
-
-        try {
-
-            setLoading(true);
-
-            const data = await getPracticeQuestions(
-
-                subject,
-
-                difficulty
-
-            );
-
-            setQuestions(data);
-
-            setCurrentIndex(0);
-
-            setSelectedAnswer("");
-
-            setShowResult(false);
-
-            setAnswered(false);
-
-            setIsCorrect(null);
-
-            setCompleted(false);
-
-            setScore(0);
-
-        }
-
-        catch (err) {
-
-            console.log(err);
-
-            alert("Unable to load questions.");
-
-        }
-
-        finally {
-
-            setLoading(false);
-
-        }
-
-    };
-
-    /* ========================================
-       CHECK ANSWER
-    ======================================== */
-
-    const checkAnswer = () => {
-
-        if (!selectedAnswer) {
-
-            alert("Please select an answer.");
-
-            return;
-
-        }
-
-        const correct =
-
-            selectedAnswer ===
-
-            questions[currentIndex].correctAnswer;
-
-        setIsCorrect(correct);
-
-        setAnswered(true);
-
-        setShowResult(true);
-
-        if (correct) {
-
-            setScore((prev) => prev + 1);
-
-        }
-
-    };
-
-    /* ========================================
-       NEXT QUESTION
-    ======================================== */
-
-    const nextQuestion = () => {
-
-        if (currentIndex === questions.length - 1) {
-
-            setCompleted(true);
-
-            return;
-
-        }
-
-        setCurrentIndex((prev) => prev + 1);
-
-        setSelectedAnswer("");
-
-        setAnswered(false);
-
-        setShowResult(false);
-
-        setIsCorrect(null);
-
-    };
-
-    /* ========================================
-       PREVIOUS QUESTION
-    ======================================== */
-
-    const previousQuestion = () => {
-
-        if (currentIndex === 0) return;
-
-        setCurrentIndex((prev) => prev - 1);
-
-        setSelectedAnswer("");
-
-        setAnswered(false);
-
-        setShowResult(false);
-
-        setIsCorrect(null);
-
-    };
-
-    /* ========================================
-       RETRY
-    ======================================== */
-
-    const retryPractice = () => {
-
-        setCurrentIndex(0);
-
-        setSelectedAnswer("");
-
-        setAnswered(false);
-
-        setShowResult(false);
-
-        setIsCorrect(null);
-
-        setCompleted(false);
-
-        setScore(0);
-
-    };
-
-    /* ========================================
-       CURRENT QUESTION
-    ======================================== */
-
-    const currentQuestion =
-
-        questions[currentIndex];
-
-    /* ========================================
-       SESSION OBJECT
-    ======================================== */
-
-    const session = {
-
-        currentQuestion,
-
-        currentIndex,
+    const {
 
         questions,
 
-        score,
+        completed,
 
-        selectedAnswer,
+        result,
 
-        answered,
+        loading,
 
-        showResult,
+        error,
 
-        isCorrect,
+    } = session;
 
-    };
-
-    /* ========================================
-       ACTIONS OBJECT
-    ======================================== */
-
-    const actions = {
-
-        setSelectedAnswer,
-
-        checkAnswer,
-
-        nextQuestion,
-
-        previousQuestion,
-
-    };
     return (
 
-    <DashboardLayout>
+        <DashboardLayout>
 
-        <div className="container-fluid py-3">
+            <div className="container-fluid py-3">
 
-            {/* Hero */}
+                {/* Hero */}
 
-            <PracticeHero
-                subject={subject}
-                setSubject={setSubject}
-            />
+                <PracticeHero />
 
-            {/* Filters (only show before starting) */}
+                {/* Filters */}
 
-            {questions.length === 0 && (
+                {questions.length === 0 && (
 
-                <PracticeFilters
-                    subject={subject}
-                    setSubject={setSubject}
-                    difficulty={difficulty}
-                    setDifficulty={setDifficulty}
-                    loading={loading}
-                    startPractice={startPractice}
-                />
+                    <PracticeFilters
 
-            )}
+                        subjects={subjects}
 
-            {/* Result Screen */}
+                        subject={subject}
 
-            {completed ? (
+                        setSubject={setSubject}
 
-                <ResultScreen
-                    score={score}
-                    questions={questions}
-                    retryPractice={retryPractice}
-                />
+                        difficulty={difficulty}
 
-            ) : (
+                        setDifficulty={setDifficulty}
 
-                <>
+                        loading={loading}
 
-                    {/* Question */}
+                        startPractice={actions.startPractice}
 
-                    {questions.length > 0 ? (
+                    />
 
-                        <QuestionCard
-                            session={session}
-                            actions={actions}
-                        />
+                )}
 
-                    ) : (
+                {/* Error */}
 
-                        <div
-                            className="rounded-4 p-5 text-center"
-                            style={{
-                                background: "#131D31",
-                                border:
-                                    "1px solid rgba(255,255,255,.08)",
-                            }}
-                        >
+                {error && (
+
+                    <div
+                        className="alert alert-danger rounded-4 mt-4"
+                        role="alert"
+                    >
+
+                        {error}
+
+                    </div>
+
+                )}
+
+                {/* Result */}
+
+                {completed ? (
+
+                    <ResultScreen
+
+                        result={result}
+
+                        retryPractice={actions.startPractice}
+
+                    />
+
+                ) : (
+
+                    <>
+
+                        {questions.length > 0 ? (
+
+                            <QuestionCard
+
+                                session={session}
+
+                                actions={actions}
+
+                            />
+
+                        ) : (
 
                             <div
+                                className="rounded-4 p-5 text-center"
                                 style={{
-                                    fontSize: "4rem",
+                                    background: "#131D31",
+                                    border: "1px solid rgba(255,255,255,.08)",
                                 }}
                             >
-                                📚
+
+                                <div
+                                    style={{
+                                        fontSize: "4rem",
+                                    }}
+                                >
+
+                                    📚
+
+                                </div>
+
+                                <h2 className="text-white fw-bold mt-3">
+
+                                    Ready to Practice?
+
+                                </h2>
+
+                                <p
+                                    className="text-secondary mx-auto mt-3"
+                                    style={{
+                                        maxWidth: "650px",
+                                    }}
+                                >
+
+                                    Select a subject and difficulty level,
+                                    then start solving practice questions
+                                    designed for your selected exam.
+
+                                </p>
+
                             </div>
 
-                            <h2 className="text-white fw-bold mt-3">
-                                Ready to Practice?
-                            </h2>
+                        )}
 
-                            <p
-                                className="text-secondary mx-auto mt-3"
-                                style={{
-                                    maxWidth: "650px",
-                                }}
-                            >
-                                Select your preferred subject and
-                                difficulty level above, then start
-                                solving practice questions designed
-                                for competitive examinations.
-                            </p>
+                    </>
 
-                        </div>
+                )}
 
-                    )}
+            </div>
 
-                </>
+        </DashboardLayout>
 
-            )}
-
-        </div>
-
-    </DashboardLayout>
-
-);
+    );
 
 }
 

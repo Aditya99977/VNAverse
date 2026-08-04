@@ -1,55 +1,95 @@
 const mongoose = require("mongoose");
 
 const examSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Exam name is required."],
-      unique: true,
-      trim: true,
-      maxlength: [100, "Exam name cannot exceed 100 characters."],
-    },
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            maxlength: 100,
+        },
 
-    slug: {
-      type: String,
-      required: [true, "Exam slug is required."],
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
+        slug: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
 
-    category: {
-      type: String,
-      required: [true, "Category is required."],
-      enum: ["Banking", "SSC", "Railway"],
-      index: true,
-    },
+        shortName: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 20,
+        },
 
-    description: {
-      type: String,
-      default: "",
-      trim: true,
-      maxlength: [500, "Description cannot exceed 500 characters."],
-    },
+        category: {
+            type: String,
+            required: true,
+            enum: [
+                "Banking",
+                "SSC",
+                "Railway",
+                "UPSC",
+                "State PSC",
+                "Teaching",
+                "Police",
+                "Defence",
+                "Insurance",
+                "Other",
+            ],
+            index: true,
+        },
 
-    icon: {
-      type: String,
-      default: "",
-      trim: true,
-    },
+        description: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 1000,
+        },
 
-    isActive: {
-      type: Boolean,
-      default: true,
-      index: true,
+        icon: {
+            type: String,
+            default: "book",
+        },
+
+        color: {
+            type: String,
+            default: "#2563EB",
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true,
+            index: true,
+        },
+
+        displayOrder: {
+            type: Number,
+            default: 1,
+        },
     },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true,
+        versionKey: false,
+    }
 );
 
-// Useful indexes
-examSchema.index({ category: 1, isActive: 1 });
+/*
+==========================================
+Indexes
+==========================================
+*/
+
+examSchema.index({
+    category: 1,
+    isActive: 1,
+});
+
+examSchema.index({
+    displayOrder: 1,
+});
 
 module.exports = mongoose.model("Exam", examSchema);

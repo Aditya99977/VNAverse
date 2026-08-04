@@ -1,6 +1,5 @@
 function PracticeFilters({
-    subjects = [ { value: "quantitative_aptitude", label: "Quantitative Aptitude" }, { value: "computer_knowledge", label: "Computer Knowledge" }, { value: "reasoning", label: "Reasoning" }, { value: "general_awareness", label: "General Awareness" }, { value: "english_language", label: "English Language" } ],
-    difficulties = [ { value: "easy", label: "Easy" }, { value: "medium", label: "Medium" }, { value: "hard", label: "Hard" } ],
+    subjects = [],
     subject,
     difficulty,
     setSubject,
@@ -8,7 +7,28 @@ function PracticeFilters({
     loading,
     startPractice,
 }) {
+
+    const difficulties = [
+        {
+            value: "",
+            label: "All Difficulty Levels",
+        },
+        {
+            value: "Easy",
+            label: "Easy",
+        },
+        {
+            value: "Medium",
+            label: "Medium",
+        },
+        {
+            value: "Hard",
+            label: "Hard",
+        },
+    ];
+
     return (
+
         <div
             className="rounded-4 p-4 mb-5"
             style={{
@@ -16,14 +36,19 @@ function PracticeFilters({
                 border: "1px solid rgba(255,255,255,.08)",
             }}
         >
+
             <div className="mb-4">
 
                 <h3 className="text-white fw-bold mb-2">
+
                     Practice Configuration
+
                 </h3>
 
                 <p className="text-secondary mb-0">
-                    Configure your practice session before getting started.
+
+                    Select a subject and difficulty before starting your practice session.
+
                 </p>
 
             </div>
@@ -35,30 +60,39 @@ function PracticeFilters({
                 <div className="col-lg-5">
 
                     <label className="form-label text-light fw-semibold">
+
                         Subject
+
                     </label>
 
                     <select
                         className="form-select py-3"
                         value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
+                        onChange={(e) =>
+                            setSubject(e.target.value)
+                        }
                         style={{
                             background: "#0F172A",
                             color: "#fff",
                             border: "1px solid rgba(255,255,255,.08)",
                         }}
                     >
+
                         <option value="">
-                            All Subjects
+
+                            Select Subject
+
                         </option>
 
                         {subjects.map((item) => (
 
                             <option
-                                key={item.value}
-                                value={item.value}
+                                key={item._id}
+                                value={item._id}
                             >
-                                {item.label}
+
+                                {item.name}
+
                             </option>
 
                         ))}
@@ -72,7 +106,9 @@ function PracticeFilters({
                 <div className="col-lg-5">
 
                     <label className="form-label text-light fw-semibold">
+
                         Difficulty
+
                     </label>
 
                     <select
@@ -87,9 +123,6 @@ function PracticeFilters({
                             border: "1px solid rgba(255,255,255,.08)",
                         }}
                     >
-                        <option value="">
-                            All Difficulty Levels
-                        </option>
 
                         {difficulties.map((item) => (
 
@@ -97,7 +130,9 @@ function PracticeFilters({
                                 key={item.value}
                                 value={item.value}
                             >
+
                                 {item.label}
+
                             </option>
 
                         ))}
@@ -106,17 +141,19 @@ function PracticeFilters({
 
                 </div>
 
-                {/* Start Button */}
+                {/* Button */}
 
                 <div className="col-lg-2 d-grid">
 
                     <label className="form-label opacity-0">
+
                         Action
+
                     </label>
 
                     <button
                         className="btn btn-primary py-3 fw-semibold rounded-3"
-                        disabled={loading}
+                        disabled={loading || !subject}
                         onClick={startPractice}
                         style={{
                             background:
@@ -124,16 +161,20 @@ function PracticeFilters({
                             border: "none",
                         }}
                     >
+
                         {loading ? (
+
                             <>
-                                <span
-                                    className="spinner-border spinner-border-sm me-2"
-                                />
-                                Loading...
+                                <span className="spinner-border spinner-border-sm me-2" />
+                                Starting...
                             </>
+
                         ) : (
+
                             "Start Practice"
+
                         )}
+
                     </button>
 
                 </div>
@@ -141,7 +182,9 @@ function PracticeFilters({
             </div>
 
         </div>
+
     );
+
 }
 
 export default PracticeFilters;

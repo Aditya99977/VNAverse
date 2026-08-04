@@ -74,63 +74,69 @@ function SubjectProgress({ data = [] }) {
 
                     ) : (
 
-                        data.map((subject, index) => (
+                        data.map((subject, index) => {
 
-                            <div
-                                key={index}
-                                className="mb-4"
-                            >
+                            const progress = Number(subject?.progress ?? 0);
 
-                                <div className="d-flex justify-content-between align-items-center mb-2">
-
-                                    <span
-                                        className="fw-semibold"
-                                        style={{
-                                            color: "#F8FAFC",
-                                        }}
-                                    >
-                                        {subject.subject}
-                                    </span>
-
-                                    <span
-                                        className="px-3 py-1 rounded-pill"
-                                        style={{
-                                            background: "rgba(255,255,255,.06)",
-                                            color: getColor(subject.progress),
-                                            fontWeight: 700,
-                                            fontSize: ".85rem",
-                                            border: "1px solid rgba(255,255,255,.08)",
-                                        }}
-                                    >
-                                        {subject.progress}%
-                                    </span>
-
-                                </div>
+                            return (
 
                                 <div
-                                    style={{
-                                        height: "10px",
-                                        borderRadius: "999px",
-                                        background: "#1E293B",
-                                        overflow: "hidden",
-                                    }}
+                                    key={subject?._id || subject?.subject || index}
+                                    className="mb-4"
                                 >
+
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+
+                                        <span
+                                            className="fw-semibold"
+                                            style={{
+                                                color: "#F8FAFC",
+                                            }}
+                                        >
+                                            {subject?.subject || "Unknown Subject"}
+                                        </span>
+
+                                        <span
+                                            className="px-3 py-1 rounded-pill"
+                                            style={{
+                                                background: "rgba(255,255,255,.06)",
+                                                color: getColor(progress),
+                                                fontWeight: 700,
+                                                fontSize: ".85rem",
+                                                border: "1px solid rgba(255,255,255,.08)",
+                                            }}
+                                        >
+                                            {progress}%
+                                        </span>
+
+                                    </div>
 
                                     <div
                                         style={{
-                                            width: `${subject.progress}%`,
-                                            height: "100%",
-                                            background: getColor(subject.progress),
+                                            height: "10px",
                                             borderRadius: "999px",
-                                            transition: "width .5s ease",
+                                            background: "#1E293B",
+                                            overflow: "hidden",
                                         }}
-                                    />
+                                    >
+
+                                        <div
+                                            style={{
+                                                width: `${Math.min(progress, 100)}%`,
+                                                height: "100%",
+                                                background: getColor(progress),
+                                                borderRadius: "999px",
+                                                transition: "width .5s ease",
+                                            }}
+                                        />
+
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            );
 
-                        ))
+                        })
 
                     )
 

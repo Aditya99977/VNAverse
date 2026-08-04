@@ -1,31 +1,117 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import Loader from "./Loader";
-
 import { useAuth } from "../hooks/useAuth";
 
-function ProtectedRoute({ children }) {
-    const { user, loading } = useAuth();
+function ProtectedRoute({
+    children,
+    requiredRole = null,
+}) {
+
+    const {
+
+        user,
+
+        loading,
+
+        isAuthenticated,
+
+    } = useAuth();
+
+    const location = useLocation();
+
+    /*
+    ==========================================
+    Wait for Session Restoration
+    ==========================================
+    */
 
     if (loading) {
+
         return <Loader />;
+
     }
 
-    // User is not logged in
-    if (!user) {
-        return <Navigate to="/login" replace />;
+    /*
+    ==========================================
+    Not Authenticated
+    ==========================================
+    */
+
+    if (!isAuthenticated) {
+
+        return (
+
+            <Navigate
+                to="/login"
+                replace
+                state={{ from: location }}
+            />
+
+        );
+
     }
 
-    // User has not selected an exam yet
+    /*
+    ==========================================
+    Role Protection
+    ==========================================
+    */
+
     if (
-        user.role === "student" &&
-        !user.preferredExam &&
-        window.location.pathname !== "/select-exam"
+
+        requiredRole &&
+
+        user.role !== requiredRole
+
     ) {
-        return <Navigate to="/select-exam" replace />;
+
+        return (
+
+            <Navigate
+                to="/dashboard"
+                replace
+            />
+
+        );
+
     }
+
+    /*
+    ==========================================
+    Student Exam Selection
+    ==========================================
+    */
+
+    if (
+
+        user.role === "student" &&
+
+        !user.preferredExam &&
+
+        location.pathname !== "/select-exam"
+
+    ) {
+
+        return (
+
+            <Navigate
+                to="/select-exam"
+                replace
+            />
+
+        );
+
+    }
+
+    /*
+    ==========================================
+    Allow Access
+    ==========================================
+    */
 
     return children;
+
 }
 
 export default ProtectedRoute;

@@ -2,11 +2,18 @@ const mongoose = require("mongoose");
 
 const questionSchema = new mongoose.Schema(
     {
+        subject: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Subject",
+            required: true,
+            index: true,
+        },
+
         question: {
             type: String,
-            required: [true, "Question is required."],
+            required: true,
             trim: true,
-            maxlength: [1000, "Question cannot exceed 1000 characters."],
+            maxlength: 2000,
         },
 
         options: {
@@ -16,95 +23,79 @@ const questionSchema = new mongoose.Schema(
                     trim: true,
                 },
             ],
-
             required: true,
-
             validate: {
                 validator(options) {
                     return Array.isArray(options) && options.length === 4;
                 },
-
-                message: "A question must contain exactly 4 options.",
+                message: "A question must contain exactly four options.",
             },
         },
 
         correctAnswer: {
             type: String,
-            required: [true, "Correct answer is required."],
+            required: true,
             trim: true,
-
             validate: {
-                validator(value) {
-                    return this.options.includes(value);
+                validator(answer) {
+                    return this.options.includes(answer);
                 },
-
-                message:
-                    "Correct answer must exist in the options array.",
+                message: "Correct answer must exist in options.",
             },
-        },
-
-        subject: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Subject",
-
-            required: [true, "Subject is required."],
-
-            index: true,
-        },
-
-        difficulty: {
-            type: String,
-
-            enum: ["Easy", "Medium", "Hard"],
-
-            default: "Easy",
-
-            index: true,
         },
 
         explanation: {
             type: String,
-
             default: "",
-
             trim: true,
+            maxlength: 3000,
+        },
+
+        difficulty: {
+            type: String,
+            enum: ["Easy", "Medium", "Hard"],
+            default: "Easy",
+            index: true,
+        },
+
+        marks: {
+            type: Number,
+            default: 1,
+            min: 1,
+        },
+
+        negativeMarks: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        language: {
+            type: String,
+            default: "English",
+        },
+
+        tags: {
+            type: [String],
+            default: [],
         },
 
         isActive: {
             type: Boolean,
-
             default: true,
-
             index: true,
         },
     },
     {
         timestamps: true,
-
         versionKey: false,
-
-        toJSON: {
-            virtuals: true,
-
-            transform(doc, ret) {
-                ret.id = ret._id;
-
-                delete ret._id;
-
-                return ret;
-            },
-        },
-
-        toObject: {
-            virtuals: true,
-        },
     }
 );
 
 /*
-========================================
+=====================================
 Indexes
-========================================
+=====================================
 */
 
 questionSchema.index({
@@ -117,18 +108,38 @@ questionSchema.index({
     isActive: 1,
 });
 
+questionSchema.index({
+    tags: 1,
+});
+
 /*
-========================================
-Normalize Options
-========================================
+=====================================
+Normalize Data
+=====================================
 */
 
 questionSchema.pre("save", function (next) {
-    this.options = this.options.map((option) => option.trim());
 
-    this.correctAnswer = this.correctAnswer.trim();
+    this.question = this.question.trim();
+
+    this.options = this.options.map((option) =>
+        option.trim()
+    );
+
+    this.correctAnswer =
+        this.correctAnswer.trim();
+
+    this.explanation =
+        this.explanation.trim();
+
+    this.tags = this.tags.map((tag) =>
+        tag.trim().toLowerCase()
+    );
 
     next();
 });
 
-module.exports = mongoose.model("Question", questionSchema);
+module.exports = mongoose.model(
+    "Question",
+    questionSchema
+);

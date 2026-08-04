@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import {
     BookOpen,
     Download,
@@ -12,10 +13,23 @@ import PaperFilters from "../components/papers/PaperFilters";
 
 import {
     getAllPapers,
-    downloadPaper,
+    recordPaperView,
+    recordPaperDownload,
 } from "../services/paperService";
 
+import { useExam } from "../context/ExamContext";
+
 function PreviousYearPapers() {
+
+    /*
+    =====================================
+    Exam Context
+    =====================================
+    */
+
+    const {
+        currentExam,
+    } = useExam();
 
     /*
     =====================================
@@ -27,21 +41,23 @@ function PreviousYearPapers() {
 
     const [loading, setLoading] = useState(true);
 
+    const [error, setError] = useState("");
+
     const [filters, setFilters] = useState({
 
         search: "",
-
-        exam: "",
 
         subject: "",
 
         year: "",
 
+        language: "",
+
     });
 
     /*
     =====================================
-    Initial Load
+    Load Papers
     =====================================
     */
 
@@ -49,79 +65,125 @@ function PreviousYearPapers() {
 
         const loadPapers = async () => {
 
-        try {
+            if (!currentExam?._id) {
 
-            setLoading(true);
+                setPapers([]);
 
-            const response = await getAllPapers();
+                setLoading(false);
 
-            const publishedPapers = response.papers.filter(
+                return;
 
-                (paper) => paper.status === "Published"
+            }
 
-            );
+            try {
 
-            setPapers(publishedPapers);
+                setLoading(true);
 
-        }
+                setError("");
 
-        catch (err) {
+                const response =
+                    await getAllPapers({
 
-            console.log(err);
+                        exam: currentExam._id,
 
-            alert("Unable to load papers.");
+                    });
 
-        }
+                setPapers(
 
-        finally {
+                    response.data || []
 
-            setLoading(false);
+                );
 
-        }
+            }
+
+            catch (error) {
+
+                console.error(
+
+                    "Load Papers Error:",
+
+                    error
+
+                );
+
+                setError(
+
+                    error?.response?.data?.message ||
+
+                    "Unable to load previous year papers."
+
+                );
+
+            }
+
+            finally {
+
+                setLoading(false);
+
+            }
 
         };
 
         loadPapers();
 
-    }, []);
+    }, [currentExam]);
 
-    /*
+        /*
     =====================================
-    Download
+    Record View
     =====================================
     */
 
-    const handleDownload = async (id) => {
+    const handleView = async (paperId) => {
 
         try {
 
-            const response = await downloadPaper(id);
-
-            const url = window.URL.createObjectURL(
-
-                new Blob([response.data])
-
-            );
-
-            const link = document.createElement("a");
-
-            link.href = url;
-
-            link.download = "Previous-Year-Paper.pdf";
-
-            document.body.appendChild(link);
-
-            link.click();
-
-            link.remove();
+            await recordPaperView(paperId);
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(
+                "Record View Error:",
+                error
+            );
 
-            alert("Unable to download paper.");
+        }
+
+    };
+
+    /*
+    =====================================
+    Download Paper
+    =====================================
+    */
+
+    const handleDownload = async (paper) => {
+
+        try {
+
+            await recordPaperDownload(
+                paper._id
+            );
+
+            window.open(
+                paper.pdfUrl,
+                "_blank"
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Download Error:",
+                error
+            );
+
+            alert(
+                "Unable to download paper."
+            );
 
         }
 
@@ -137,49 +199,65 @@ function PreviousYearPapers() {
 
         return papers.filter((paper) => {
 
-            return (
+            const matchesSearch =
+
+                !filters.search ||
 
                 paper.title
-                    .toLowerCase()
-                    .includes(filters.search.toLowerCase())
+                    ?.toLowerCase()
+                    .includes(
+                        filters.search.toLowerCase()
+                    );
 
-                &&
+            const matchesSubject =
 
-                (
-                    filters.exam === "" ||
+                !filters.subject ||
 
-                    paper.exam
-                        .toLowerCase()
-                        .includes(filters.exam.toLowerCase())
-                )
+                paper.subject?.name ===
+                    filters.subject ||
 
-                &&
+                paper.subject ===
+                    filters.subject;
 
-                (
-                    filters.subject === "" ||
+            const matchesYear =
 
-                    paper.subject
-                        .toLowerCase()
-                        .includes(filters.subject.toLowerCase())
-                )
+                !filters.year ||
 
-                &&
+                String(paper.year) ===
+                    String(filters.year);
 
-                (
-                    filters.year === "" ||
+            const matchesLanguage =
 
-                    paper.year.toString() === filters.year
-                )
+                !filters.language ||
+
+                paper.language ===
+                    filters.language;
+
+            return (
+
+                matchesSearch &&
+
+                matchesSubject &&
+
+                matchesYear &&
+
+                matchesLanguage
 
             );
 
         });
 
-    }, [papers, filters]);
+    }, [
+
+        papers,
+
+        filters,
+
+    ]);
 
     /*
     =====================================
-    Loading
+    Loading State
     =====================================
     */
 
@@ -189,9 +267,7 @@ function PreviousYearPapers() {
 
             <MainLayout>
 
-                <div
-                    className="container py-5"
-                >
+                <div className="container py-5">
 
                     <div
                         className="rounded-4 p-5 text-center"
@@ -202,9 +278,7 @@ function PreviousYearPapers() {
                         }}
                     >
 
-                        <div
-                            className="spinner-border text-primary mb-4"
-                        />
+                        <div className="spinner-border text-primary mb-4" />
 
                         <h3 className="text-white">
 
@@ -226,64 +300,139 @@ function PreviousYearPapers() {
 
         );
 
-    }    return (
+    }
+
+    /*
+    =====================================
+    Error State
+    =====================================
+    */
+
+    if (error) {
+
+        return (
+
+            <MainLayout>
+
+                <div className="container py-5">
+
+                    <div className="alert alert-danger">
+
+                        {error}
+
+                    </div>
+
+                </div>
+
+            </MainLayout>
+
+        );
+
+    }
+
+    /*
+    =====================================
+    UI
+    =====================================
+    */
+
+    return (
 
         <MainLayout>
 
-            <div className="container py-4">
+            <div className="container py-4">            {/* =====================================
+                Hero Section
+            ===================================== */}
 
-                {/* Hero */}
+            <div
+                className="rounded-4 overflow-hidden position-relative mb-5"
+                style={{
+                    background:
+                        "linear-gradient(135deg,#2563EB 0%,#1D4ED8 45%,#0F172A 100%)",
+                }}
+            >
 
                 <div
-                    className="rounded-4 overflow-hidden position-relative mb-5"
+                    className="position-absolute"
                     style={{
-                        background:
-                            "linear-gradient(135deg,#2563EB 0%,#1D4ED8 45%,#0F172A 100%)",
+                        width: 260,
+                        height: 260,
+                        right: -80,
+                        top: -80,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,.08)",
                     }}
-                >
+                />
+
+                <div className="position-relative p-5">
+
+                    <span className="badge bg-light text-primary rounded-pill px-3 py-2 mb-3">
+
+                        Previous Year Papers
+
+                    </span>
+
+                    <h1
+                        className="text-white fw-bold mb-3"
+                        style={{
+                            fontSize:
+                                "clamp(2rem,4vw,3.2rem)",
+                        }}
+                    >
+
+                        {currentExam?.name || "Previous Year Papers"}
+
+                    </h1>
+
+                    <p
+                        className="text-white-50 mb-0"
+                        style={{
+                            maxWidth: "720px",
+                        }}
+                    >
+
+                        Browse official previous year papers,
+                        filter by subject, year and language,
+                        then download PDFs to strengthen your
+                        preparation.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            {/* =====================================
+                Statistics
+            ===================================== */}
+
+            <div className="row g-4 mb-5">
+
+                <div className="col-md-4">
 
                     <div
-                        className="position-absolute"
+                        className="rounded-4 p-4 h-100"
                         style={{
-                            width: 260,
-                            height: 260,
-                            right: -80,
-                            top: -80,
-                            borderRadius: "50%",
-                            background: "rgba(255,255,255,.08)",
+                            background: "#131D31",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
                         }}
-                    />
+                    >
 
-                    <div className="position-relative p-5">
+                        <BookOpen
+                            size={30}
+                            className="text-primary mb-3"
+                        />
 
-                        <span className="badge bg-light text-primary rounded-pill px-3 py-2 mb-3">
+                        <h2 className="text-white fw-bold">
 
-                            Previous Year Papers
+                            {papers.length}
 
-                        </span>
+                        </h2>
 
-                        <h1
-                            className="text-white fw-bold mb-3"
-                            style={{
-                                fontSize:
-                                    "clamp(2rem,4vw,3.2rem)",
-                            }}
-                        >
+                        <p className="text-secondary mb-0">
 
-                            Practice With Real Exam Papers
-
-                        </h1>
-
-                        <p
-                            className="text-white-50 mb-0"
-                            style={{
-                                maxWidth: "700px",
-                            }}
-                        >
-
-                            Browse official previous year papers,
-                            filter by exam and subject, and download
-                            PDFs to strengthen your preparation.
+                            Total Papers
 
                         </p>
 
@@ -291,137 +440,125 @@ function PreviousYearPapers() {
 
                 </div>
 
-                {/* Statistics */}
+                <div className="col-md-4">
 
-                <div className="row g-4 mb-5">
+                    <div
+                        className="rounded-4 p-4 h-100"
+                        style={{
+                            background: "#131D31",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+                        }}
+                    >
 
-                    <div className="col-md-4">
+                        <Search
+                            size={30}
+                            className="text-primary mb-3"
+                        />
 
-                        <div
-                            className="rounded-4 p-4 h-100"
-                            style={{
-                                background: "#131D31",
-                                border:
-                                    "1px solid rgba(255,255,255,.08)",
-                            }}
-                        >
+                        <h2 className="text-white fw-bold">
 
-                            <BookOpen
-                                size={30}
-                                className="text-primary mb-3"
-                            />
+                            {filteredPapers.length}
 
-                            <h2 className="text-white fw-bold">
+                        </h2>
 
-                                {papers.length}
+                        <p className="text-secondary mb-0">
 
-                            </h2>
+                            Matching Results
 
-                            <p className="text-secondary mb-0">
-
-                                Available Papers
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-4">
-
-                        <div
-                            className="rounded-4 p-4 h-100"
-                            style={{
-                                background: "#131D31",
-                                border:
-                                    "1px solid rgba(255,255,255,.08)",
-                            }}
-                        >
-
-                            <Search
-                                size={30}
-                                className="text-primary mb-3"
-                            />
-
-                            <h2 className="text-white fw-bold">
-
-                                {filteredPapers.length}
-
-                            </h2>
-
-                            <p className="text-secondary mb-0">
-
-                                Matching Results
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-4">
-
-                        <div
-                            className="rounded-4 p-4 h-100"
-                            style={{
-                                background: "#131D31",
-                                border:
-                                    "1px solid rgba(255,255,255,.08)",
-                            }}
-                        >
-
-                            <Download
-                                size={30}
-                                className="text-primary mb-3"
-                            />
-
-                            <h2 className="text-white fw-bold">
-
-                                PDF
-
-                            </h2>
-
-                            <p className="text-secondary mb-0">
-
-                                Download Format
-
-                            </p>
-
-                        </div>
+                        </p>
 
                     </div>
 
                 </div>
 
-                {/* Filters */}
+                <div className="col-md-4">
 
-                <PaperFilters
+                    <div
+                        className="rounded-4 p-4 h-100"
+                        style={{
+                            background: "#131D31",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+                        }}
+                    >
 
-                    filters={filters}
+                        <Download
+                            size={30}
+                            className="text-primary mb-3"
+                        />
 
-                    setFilters={setFilters}
+                        <h2 className="text-white fw-bold">
 
-                />
+                            PDF
 
-                {/* Papers */}
+                        </h2>
 
-                {filteredPapers.length > 0 ? (
+                        <p className="text-secondary mb-0">
+
+                            Download Format
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* =====================================
+                Filters
+            ===================================== */}
+
+            <PaperFilters
+
+                filters={filters}
+
+                setFilters={setFilters}
+
+                papers={papers}
+
+            />            {/* =====================================
+                Papers
+            ===================================== */}
+
+            {
+
+                filteredPapers.length > 0 ? (
 
                     <div className="row g-4">
 
-                        {filteredPapers.map((paper) => (
+                        {
 
-                            <PaperCard
+                            filteredPapers.map((paper) => (
 
-                                key={paper._id}
+                                <PaperCard
 
-                                paper={paper}
+                                    key={paper._id}
 
-                                onDownload={handleDownload}
+                                    paper={paper}
 
-                            />
+                                    onView={() =>
 
-                        ))}
+                                        handleView(
+                                            paper._id
+                                        )
+
+                                    }
+
+                                    onDownload={() =>
+
+                                        handleDownload(
+                                            paper
+                                        )
+
+                                    }
+
+                                />
+
+                            ))
+
+                        }
 
                     </div>
 
@@ -437,39 +574,40 @@ function PreviousYearPapers() {
                     >
 
                         <BookOpen
-                            size={70}
+                            size={72}
                             className="text-primary mb-4"
                         />
 
                         <h3 className="text-white fw-bold">
 
-                            No Papers Found
+                            No Previous Year Papers Found
 
                         </h3>
 
                         <p
                             className="text-secondary mx-auto mb-0"
                             style={{
-                                maxWidth: "550px",
+                                maxWidth: "600px",
                             }}
                         >
 
-                            We couldn't find any previous year
-                            papers matching your current filters.
-                            Try adjusting your search or clearing
-                            the applied filters.
+                            No papers match your current
+                            filters. Try changing the search,
+                            subject, year or language filters.
 
                         </p>
 
                     </div>
 
-                )}
+                )
 
-            </div>
+            }
 
-        </MainLayout>
+        </div>
 
-    );
+    </MainLayout>
+
+);
 
 }
 

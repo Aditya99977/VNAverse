@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import MainLayout from "../layouts/MainLayout";
 
 import PaperTable from "../components/papers/PaperTable";
@@ -7,13 +8,27 @@ import DeletePaperModal from "../components/papers/DeletePaperModal";
 import PaperFilters from "../components/papers/PaperFilters";
 
 import {
-    uploadPaper,
-    getAllPapers,
-    getPaperById,
+
+    createPaper,
+
+    getAllPapersAdmin,
+
+    getPaperDetails,
+
     updatePaper,
+
     deletePaper,
-    downloadPaper,
-    getPaperStatistics
+
+    publishPaper,
+
+    unpublishPaper,
+
+    activatePaper,
+
+    deactivatePaper,
+
+    getPaperStatistics,
+
 } from "../services/paperService";
 
 function PaperManagement() {
@@ -30,6 +45,8 @@ function PaperManagement() {
 
     const [loading, setLoading] = useState(true);
 
+    const [error, setError] = useState("");
+
     const [selectedPaper, setSelectedPaper] = useState(null);
 
     const [editingPaper, setEditingPaper] = useState(null);
@@ -42,11 +59,11 @@ function PaperManagement() {
 
         search: "",
 
-        exam: "",
-
         subject: "",
 
-        year: ""
+        year: "",
+
+        language: "",
 
     });
 
@@ -68,31 +85,61 @@ function PaperManagement() {
     =====================================
     */
 
-    async function loadPapers() {
+    const loadPapers = async () => {
 
         try {
 
             setLoading(true);
 
-            const [paperResponse, statsResponse] = await Promise.all([
+            setError("");
 
-                getAllPapers(),
+            const [
 
-                getPaperStatistics()
+                papersResponse,
+
+                statisticsResponse,
+
+            ] = await Promise.all([
+
+                getAllPapersAdmin(),
+
+                getPaperStatistics(),
 
             ]);
 
-            setPapers(paperResponse.papers || []);
+            setPapers(
 
-            setStatistics(statsResponse.statistics);
+                papersResponse.data ||
+
+                papersResponse.papers ||
+
+                []
+
+            );
+
+            setStatistics(
+
+                statisticsResponse.data ||
+
+                statisticsResponse.statistics ||
+
+                null
+
+            );
 
         }
 
-        catch (err) {
+        catch (error) {
 
-            console.log(err);
+            console.error(error);
 
-            alert("Unable to load papers.");
+            setError(
+
+                error.response?.data?.message ||
+
+                "Unable to load previous year papers."
+
+            );
 
         }
 
@@ -102,523 +149,712 @@ function PaperManagement() {
 
         }
 
-    }
+    };/*
+=====================================
+Create / Update Paper
+=====================================
+*/
 
-    /*
-    =====================================
-    Upload / Update Paper
-    =====================================
-    */
+const handleSavePaper = async (formData) => {
 
-    const handleSavePaper = async (formData) => {
+    try {
 
-        try {
+        if (editingPaper) {
 
-            if (editingPaper) {
+            await updatePaper(
 
-                await updatePaper(
+                editingPaper._id,
 
-                    editingPaper._id,
-
-                    formData
-
-                );
-
-                alert("Paper updated successfully.");
-
-            }
-
-            else {
-
-                await uploadPaper(formData);
-
-                alert("Paper uploaded successfully.");
-
-            }
-
-            setShowForm(false);
-
-            setEditingPaper(null);
-
-            await loadPapers();
-
-        }
-
-        catch (err) {
-
-            console.log(err);
-
-            alert(
-
-                err.response?.data?.message ||
-
-                "Unable to save paper."
+                formData
 
             );
 
+            alert("Paper updated successfully.");
+
         }
 
-    };
+        else {
 
-    /*
-    =====================================
-    Edit Paper
-    =====================================
-    */
+            await createPaper(formData);
 
-    const handleEdit = async (paper) => {
+            alert("Paper created successfully.");
 
-        try {
+        }
 
-            const response = await getPaperById(
+        setShowForm(false);
+
+        setEditingPaper(null);
+
+        await loadPapers();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+
+            error.response?.data?.message ||
+
+            "Unable to save paper."
+
+        );
+
+    }
+
+};
+
+/*
+=====================================
+Edit Paper
+=====================================
+*/
+
+const handleEdit = async (paper) => {
+
+    try {
+
+        const response = await getPaperDetails(
+
+            paper._id
+
+        );
+
+        setEditingPaper(
+
+            response.data ||
+
+            response.paper
+
+        );
+
+        setShowForm(true);
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert("Unable to load paper.");
+
+    }
+
+};
+
+/*
+=====================================
+Delete
+=====================================
+*/
+
+const handleDelete = (paper) => {
+
+    setSelectedPaper(paper);
+
+    setShowDeleteModal(true);
+
+};
+
+const confirmDelete = async (id) => {
+
+    try {
+
+        await deletePaper(id);
+
+        alert("Paper deleted successfully.");
+
+        setShowDeleteModal(false);
+
+        setSelectedPaper(null);
+
+        await loadPapers();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert("Unable to delete paper.");
+
+    }
+
+};
+
+/*
+=====================================
+Publish / Unpublish
+=====================================
+*/
+
+const handlePublishToggle = async (paper) => {
+
+    try {
+
+        if (paper.isPublished) {
+
+            await unpublishPaper(
 
                 paper._id
 
             );
 
-            setEditingPaper(response.paper);
-
-            setShowForm(true);
-
         }
 
-        catch (err) {
+        else {
 
-            console.log(err);
+            await publishPaper(
 
-            alert("Unable to load paper.");
-
-        }
-
-    };
-
-    /*
-    =====================================
-    Delete Click
-    =====================================
-    */
-
-    const handleDelete = (paper) => {
-
-        setSelectedPaper(paper);
-
-        setShowDeleteModal(true);
-
-    };
-
-    /*
-    =====================================
-    Confirm Delete
-    =====================================
-    */
-
-    const confirmDelete = async (id) => {
-
-        try {
-
-            await deletePaper(id);
-
-            alert("Paper deleted successfully.");
-
-            setShowDeleteModal(false);
-
-            setSelectedPaper(null);
-
-            await loadPapers();
-
-        }
-
-        catch (err) {
-
-            console.log(err);
-
-            alert("Unable to delete paper.");
-
-        }
-
-    };
-
-    /*
-    =====================================
-    Download Paper
-    =====================================
-    */
-
-    const handleDownload = async (id) => {
-
-        try {
-
-            const response = await downloadPaper(id);
-
-            const url = window.URL.createObjectURL(
-                new Blob([response.data])
-            );
-
-            const link = document.createElement("a");
-
-            link.href = url;
-
-            link.setAttribute(
-
-                "download",
-
-                "Previous-Year-Paper.pdf"
+                paper._id
 
             );
 
-            document.body.appendChild(link);
+        }
 
-            link.click();
+        await loadPapers();
 
-            link.remove();
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert("Unable to update paper.");
+
+    }
+
+};
+
+/*
+=====================================
+Activate / Deactivate
+=====================================
+*/
+
+const handleStatusToggle = async (paper) => {
+
+    try {
+
+        if (paper.isActive) {
+
+            await deactivatePaper(
+
+                paper._id
+
+            );
 
         }
 
-        catch (err) {
+        else {
 
-            console.log(err);
+            await activatePaper(
 
-            alert("Unable to download paper.");
+                paper._id
+
+            );
 
         }
 
-    };
-        /*
-    =====================================
-    Filter Papers
-    =====================================
-    */
+        await loadPapers();
 
-    const filteredPapers = papers.filter((paper) => {
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert("Unable to update status.");
+
+    }
+
+};
+
+/*
+=====================================
+Filters
+=====================================
+*/
+
+const filteredPapers = useMemo(() => {
+
+    return papers.filter((paper) => {
+
+        const matchesSearch =
+
+            !filters.search ||
+
+            paper.title
+
+                ?.toLowerCase()
+
+                .includes(
+
+                    filters.search.toLowerCase()
+
+                );
+
+        const matchesSubject =
+
+            !filters.subject ||
+
+            paper.subject?.name ===
+
+                filters.subject;
+
+        const matchesYear =
+
+            !filters.year ||
+
+            String(paper.year) ===
+
+                String(filters.year);
+
+        const matchesLanguage =
+
+            !filters.language ||
+
+            paper.language ===
+
+                filters.language;
 
         return (
 
-            paper.title
-                .toLowerCase()
-                .includes(filters.search.toLowerCase())
+            matchesSearch &&
 
-            &&
+            matchesSubject &&
 
-            (filters.exam === "" ||
+            matchesYear &&
 
-                paper.exam
-                    .toLowerCase()
-                    .includes(filters.exam.toLowerCase()))
-
-            &&
-
-            (filters.subject === "" ||
-
-                paper.subject
-                    .toLowerCase()
-                    .includes(filters.subject.toLowerCase()))
-
-            &&
-
-            (filters.year === "" ||
-
-                paper.year.toString() === filters.year)
+            matchesLanguage
 
         );
 
     });
 
-    /*
-    =====================================
-    Loading Screen
-    =====================================
-    */
+}, [
 
-    if (loading) {
+    papers,
 
-        return (
+    filters,
 
-            <MainLayout>
+]);/*
+=====================================
+Loading
+=====================================
+*/
 
-                <div className="container py-5 text-center">
-
-                    <h3>Loading Previous Year Papers...</h3>
-
-                </div>
-
-            </MainLayout>
-
-        );
-
-    }
+if (loading) {
 
     return (
 
         <MainLayout>
 
-            <div className="container-fluid py-4">
+            <div className="container py-5">
 
-                {/* ===============================
-                    Page Header
-                =============================== */}
+                <div
+                    className="rounded-4 p-5 text-center"
+                    style={{
+                        background: "#131D31",
+                        border:
+                            "1px solid rgba(255,255,255,.08)",
+                    }}
+                >
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <div className="spinner-border text-primary mb-4" />
 
-                    <h2 className="fw-bold">
+                    <h3 className="text-white">
 
-                        📄 Previous Year Papers
+                        Loading Previous Year Papers...
 
-                    </h2>
+                    </h3>
 
-                    <button
+                    <p className="text-secondary mb-0">
 
-                        className="btn btn-success"
+                        Please wait while we load the papers.
 
-                        onClick={() => {
-
-                            setEditingPaper(null);
-
-                            setShowForm(true);
-
-                        }}
-
-                    >
-
-                        ➕ Upload Paper
-
-                    </button>
+                    </p>
 
                 </div>
-
-                {/* ===============================
-                    Statistics
-                =============================== */}
-
-                {
-
-                    statistics && (
-
-                        <div className="row mb-4">
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Total Papers</h6>
-
-                                        <h3>
-
-                                            {statistics.totalPapers}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Published</h6>
-
-                                        <h3 className="text-success">
-
-                                            {statistics.published}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Draft</h6>
-
-                                        <h3 className="text-warning">
-
-                                            {statistics.draft}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div className="col-md-3">
-
-                                <div className="card shadow-sm">
-
-                                    <div className="card-body text-center">
-
-                                        <h6>Total Downloads</h6>
-
-                                        <h3>
-
-                                            {statistics.totalDownloads}
-
-                                        </h3>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    )
-
-                }
-
-                {/* ===============================
-                    Filters
-                =============================== */}
-
-                <PaperFilters
-
-                    filters={filters}
-
-                    setFilters={setFilters}
-
-                />
-
-                {/* ===============================
-                    Paper Table
-                =============================== */}
-
-                <PaperTable
-
-                    papers={filteredPapers}
-
-                    onEdit={handleEdit}
-
-                    onDelete={handleDelete}
-
-                    onDownload={handleDownload}
-
-                />
-                                {/* ===============================
-                    Create / Edit Paper Modal
-                =============================== */}
-
-                {
-
-                    showForm && (
-
-                        <div
-                            className="modal fade show"
-                            style={{
-                                display: "block",
-                                backgroundColor: "rgba(0,0,0,0.5)"
-                            }}
-                        >
-
-                            <div className="modal-dialog modal-xl">
-
-                                <div className="modal-content">
-
-                                    <div className="modal-header">
-
-                                        <h5>
-
-                                            {
-
-                                                editingPaper
-
-                                                    ? "✏️ Edit Previous Year Paper"
-
-                                                    : "📄 Upload Previous Year Paper"
-
-                                            }
-
-                                        </h5>
-
-                                        <button
-
-                                            className="btn-close"
-
-                                            onClick={() => {
-
-                                                setShowForm(false);
-
-                                                setEditingPaper(null);
-
-                                            }}
-
-                                        />
-
-                                    </div>
-
-                                    <div className="modal-body">
-
-                                        <PaperForm
-
-                                            key={editingPaper?._id || "new-paper"}
-
-                                            editingPaper={editingPaper}
-
-                                            onSubmit={handleSavePaper}
-
-                                            onCancel={() => {
-
-                                                setShowForm(false);
-
-                                                setEditingPaper(null);
-
-                                            }}
-
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    )
-
-                }
-
-                {/* ===============================
-                    Delete Paper Modal
-                =============================== */}
-
-                <DeletePaperModal
-
-                    show={showDeleteModal}
-
-                    paper={selectedPaper}
-
-                    onClose={() => {
-
-                        setShowDeleteModal(false);
-
-                        setSelectedPaper(null);
-
-                    }}
-
-                    onConfirm={confirmDelete}
-
-                />
 
             </div>
 
         </MainLayout>
 
     );
+
+}
+
+/*
+=====================================
+Error
+=====================================
+*/
+
+if (error) {
+
+    return (
+
+        <MainLayout>
+
+            <div className="container py-5">
+
+                <div className="alert alert-danger">
+
+                    {error}
+
+                </div>
+
+            </div>
+
+        </MainLayout>
+
+    );
+
+}
+
+/*
+=====================================
+UI
+=====================================
+*/
+
+return (
+
+    <MainLayout>
+
+        <div className="container-fluid py-4">
+
+            {/* ===============================
+                Header
+            =============================== */}
+
+            <div className="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h2 className="fw-bold mb-1">
+
+                        Previous Year Papers
+
+                    </h2>
+
+                    <p className="text-secondary mb-0">
+
+                        Manage all previous year papers from one place.
+
+                    </p>
+
+                </div>
+
+                <button
+
+                    className="btn btn-primary px-4"
+
+                    onClick={() => {
+
+                        setEditingPaper(null);
+
+                        setShowForm(true);
+
+                    }}
+
+                >
+
+                    + Add Paper
+
+                </button>
+
+            </div>
+
+            {/* ===============================
+                Statistics
+            =============================== */}
+
+            {
+
+                statistics && (
+
+                    <div className="row g-4 mb-4">
+
+                        <div className="col-md-3">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background:"#131D31",
+                                    border:"1px solid rgba(255,255,255,.08)",
+                                }}
+                            >
+
+                                <h6 className="text-secondary">
+
+                                    Total Papers
+
+                                </h6>
+
+                                <h2 className="text-white">
+
+                                    {statistics.total ?? 0}
+
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+                        <div className="col-md-3">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background:"#131D31",
+                                    border:"1px solid rgba(255,255,255,.08)",
+                                }}
+                            >
+
+                                <h6 className="text-secondary">
+
+                                    Published
+
+                                </h6>
+
+                                <h2 className="text-success">
+
+                                    {statistics.published ?? 0}
+
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+                        <div className="col-md-3">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background:"#131D31",
+                                    border:"1px solid rgba(255,255,255,.08)",
+                                }}
+                            >
+
+                                <h6 className="text-secondary">
+
+                                    Active
+
+                                </h6>
+
+                                <h2 className="text-primary">
+
+                                    {statistics.active ?? 0}
+
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+                        <div className="col-md-3">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background:"#131D31",
+                                    border:"1px solid rgba(255,255,255,.08)",
+                                }}
+                            >
+
+                                <h6 className="text-secondary">
+
+                                    Inactive
+
+                                </h6>
+
+                                <h2 className="text-danger">
+
+                                    {statistics.inactive ?? 0}
+
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+
+            }
+
+            {/* ===============================
+                Filters
+            =============================== */}
+
+            <PaperFilters
+
+                filters={filters}
+
+                setFilters={setFilters}
+
+                papers={papers}
+
+            />
+
+            {/* ===============================
+                Paper Table
+            =============================== */}
+
+            <PaperTable
+
+                papers={filteredPapers}
+
+                onEdit={handleEdit}
+
+                onDelete={handleDelete}
+
+                onPublishToggle={handlePublishToggle}
+
+                onStatusToggle={handleStatusToggle}
+
+            />            {/* ===============================
+                Create / Edit Paper
+            =============================== */}
+
+            {
+
+                showForm && (
+
+                    <div
+                        className="modal fade show"
+                        style={{
+                            display: "block",
+                            background:
+                                "rgba(0,0,0,.55)",
+                        }}
+                    >
+
+                        <div className="modal-dialog modal-xl">
+
+                            <div
+                                className="modal-content"
+                                style={{
+                                    background: "#131D31",
+                                    border:
+                                        "1px solid rgba(255,255,255,.08)",
+                                }}
+                            >
+
+                                <div
+                                    className="modal-header border-secondary"
+                                >
+
+                                    <h5 className="text-white mb-0">
+
+                                        {
+
+                                            editingPaper
+
+                                                ? "Edit Previous Year Paper"
+
+                                                : "Create Previous Year Paper"
+
+                                        }
+
+                                    </h5>
+
+                                    <button
+
+                                        type="button"
+
+                                        className="btn-close btn-close-white"
+
+                                        onClick={() => {
+
+                                            setShowForm(false);
+
+                                            setEditingPaper(null);
+
+                                        }}
+
+                                    />
+
+                                </div>
+
+                                <div className="modal-body">
+
+                                    <PaperForm
+
+                                        key={
+
+                                            editingPaper?._id ||
+
+                                            "new-paper"
+
+                                        }
+
+                                        editingPaper={
+
+                                            editingPaper
+
+                                        }
+
+                                        onSubmit={
+
+                                            handleSavePaper
+
+                                        }
+
+                                        onCancel={() => {
+
+                                            setShowForm(false);
+
+                                            setEditingPaper(null);
+
+                                        }}
+
+                                    />
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+
+            }
+
+            {/* ===============================
+                Delete Modal
+            =============================== */}
+
+            <DeletePaperModal
+
+                show={showDeleteModal}
+
+                paper={selectedPaper}
+
+                onClose={() => {
+
+                    setShowDeleteModal(false);
+
+                    setSelectedPaper(null);
+
+                }}
+
+                onConfirm={confirmDelete}
+
+            />
+
+        </div>
+
+    </MainLayout>
+
+);
 
 }
 

@@ -1,81 +1,112 @@
 const mongoose = require("mongoose");
 
 const mockTestSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: [true, "Mock test title is required"],
-      trim: true,
-    },
+    {
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 150,
+        },
 
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+        description: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 1000,
+        },
 
-    exam: {
-      type: String,
-      required: [true, "Exam category is required"],
-      trim: true,
-    },
+        exam: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Exam",
+            required: true,
+            index: true,
+        },
 
-    subject: {
-      type: String,
-      required: [true, "Subject is required"],
-      trim: true,
-    },
+        subjects: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Subject",
+            },
+        ],
 
-    duration: {
-      type: Number,
-      required: [true, "Duration is required"],
-      min: 1,
-    },
+        questions: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Question",
+                required: true,
+            },
+        ],
 
-    totalMarks: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
+        duration: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
 
-    passingMarks: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+        totalQuestions: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
 
-    negativeMarking: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
+        totalMarks: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
 
-    questions: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Question",
-      },
-    ],
+        negativeMarks: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
 
-    status: {
-      type: String,
-      enum: ["Draft", "Published"],
-      default: "Draft",
-    },
+        difficulty: {
+            type: String,
+            enum: ["Easy", "Medium", "Hard", "Mixed"],
+            default: "Mixed",
+        },
 
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+        isPremium: {
+            type: Boolean,
+            default: false,
+        },
+
+        isPublished: {
+            type: Boolean,
+            default: true,
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true,
+            index: true,
+        },
     },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true,
+        versionKey: false,
+    }
 );
 
-// Helpful indexes
-mockTestSchema.index({ exam: 1 });
-mockTestSchema.index({ subject: 1 });
-mockTestSchema.index({ status: 1 });
+/*
+==========================================
+Indexes
+==========================================
+*/
 
-module.exports = mongoose.model("MockTest", mockTestSchema);
+mockTestSchema.index({
+    exam: 1,
+    isActive: 1,
+});
+
+mockTestSchema.index({
+    exam: 1,
+    difficulty: 1,
+});
+
+module.exports = mongoose.model(
+    "MockTest",
+    mockTestSchema
+);

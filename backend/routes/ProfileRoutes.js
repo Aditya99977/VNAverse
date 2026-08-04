@@ -3,66 +3,37 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware.js");
+const upload = require("../middleware/uploadMiddleware");
 
 const {
-
     getProfile,
-
     updateProfile,
-
-    uploadProfileImage
-
+    uploadProfileImage,
 } = require("../controllers/ProfileController");
 
 /*
 ====================================
-Get Profile
+Profile Routes
 ====================================
 */
 
 router.get(
-
     "/",
-
     authMiddleware,
-
     getProfile
-
 );
 
-/*
-====================================
-Update Profile
-====================================
-*/
-
 router.put(
-
     "/",
-
     authMiddleware,
-
     updateProfile
-
 );
 
-/*
-====================================
-Upload Profile Image
-====================================
-*/
-
 router.put(
-
     "/upload-profile-image",
-
     authMiddleware,
-
     upload.single("profileImage"),
-
     uploadProfileImage
-
 );
 
 module.exports = router;

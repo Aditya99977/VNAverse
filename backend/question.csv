@@ -1,4 +1,11 @@
-question,option1,option2,option3,option4,correctAnswer,subject,difficulty
-What is RAM?,Random Access Memory,Read Access Memory,Run Access Memory,Real Access Memory,Random Access Memory,Computer Knowledge,Easy
-Capital of India?,Mumbai,Delhi,Chennai,Kolkata,Delhi,General Knowledge,Easy
-2 + 2 = ?,2,3,4,5,4,Quantitative Aptitude,Easy
+exam,subject,question,option1,option2,option3,option4,correctAnswer,difficulty,explanation
+IBPS Clerk,Computer Knowledge,What is RAM?,Random Access Memory,Read Access Memory,Run Access Memory,Real Access Memory,Random Access Memory,Easy,RAM is the primary temporary memory used by the computer.
+IBPS Clerk,Computer Knowledge,Which device is known as the brain of the computer?,CPU,Monitor,Keyboard,Mouse,CPU,Easy,CPU performs all processing operations.
+IBPS Clerk,Computer Knowledge,Which key is used to refresh a webpage?,F2,F5,F8,F10,F5,Easy,F5 refreshes the current webpage in most browsers.
+IBPS Clerk,Quantitative Aptitude,2 + 2 = ?,2,3,4,5,4,Easy,Basic arithmetic addition.
+IBPS Clerk,Quantitative Aptitude,What is 15 × 12?,120,150,180,200,180,Easy,15 multiplied by 12 equals 180.
+IBPS Clerk,Quantitative Aptitude,The average of 10 and 20 is?,10,15,20,25,15,Medium,"(10 + 20) / 2 = 15."
+IBPS Clerk,Reasoning Ability,"Find the next number: 2, 4, 8, 16, ?",24,28,30,32,32,Easy,Each number is doubled.
+IBPS Clerk,Reasoning Ability,If CAT is coded as DBU then DOG is coded as?,EPH,EOH,DPH,EPG,EPH,Medium,Each letter is shifted by one alphabet.
+IBPS Clerk,English Language,Choose the correct spelling.,Recieve,Receive,Receeve,Receve,Receive,Easy,Receive is the correct spelling.
+IBPS Clerk,General Awareness,What is the capital of India?,Mumbai,Delhi,Chennai,Kolkata,Delhi,Easy,New Delhi is the capital city of India.

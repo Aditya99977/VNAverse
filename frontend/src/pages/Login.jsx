@@ -14,7 +14,6 @@ import FormInput from "../components/FormInput";
 import PasswordInput from "../components/PasswordInput";
 import AuthButton from "../components/AuthButton";
 
-import { loginUser } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
 const loginSchema = z.object({
@@ -49,36 +48,70 @@ function Login() {
 
     });
 
-    const onSubmit = async (data) => {
+    /*
+    ==========================================
+    Login
+    ==========================================
+    */
+
+    const onSubmit = async (formData) => {
+
+        if (loading) return;
 
         try {
 
             setLoading(true);
 
-            const response = await loginUser(data);
+            const response = await login(formData);
 
-            login(
-                response.token,
-                response.user
-            );
+            if (!response.success) {
 
-            toast.success("Welcome back to VNAverse!");
+                toast.error(response.message);
+
+                return;
+
+            }
+
+            const user = response.data.user;
+
+            toast.success(response.message);
 
             setTimeout(() => {
 
-                // Admin Login
-                if (response.user.role === "admin") {
+                /*
+                ==========================================
+                Admin
+                ==========================================
+                */
+
+                if (user.role === "admin") {
+
                     navigate("/admin");
+
                     return;
+
                 }
 
-                // Student Onboarding
-                if (!response.user.preferredExam) {
+                /*
+                ==========================================
+                First Time Student
+                ==========================================
+                */
+
+                if (!user.preferredExam) {
+
                     navigate("/select-exam");
+
                     return;
+
                 }
 
-                // Existing Student
+                /*
+                ==========================================
+                Existing Student
+                ==========================================
+                */
+
                 navigate("/dashboard");
 
             }, 1200);
@@ -88,8 +121,13 @@ function Login() {
         catch (error) {
 
             toast.error(
-                error.response?.data?.message ||
-                "Login Failed"
+
+                error?.response?.data?.message ||
+
+                error?.message ||
+
+                "Login failed. Please try again."
+
             );
 
         }

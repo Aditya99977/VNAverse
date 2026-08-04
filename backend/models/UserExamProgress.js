@@ -1,101 +1,22 @@
 const mongoose = require("mongoose");
 
-const subjectProgressSchema = new mongoose.Schema(
-    {
-        subject: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-
-        accuracy: {
-            type: Number,
-            default: 0,
-            min: 0,
-            max: 100,
-        },
-
-        questionsSolved: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        correctAnswers: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        wrongAnswers: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        averageTime: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-    },
-    {
-        _id: false,
-    }
-);
-
 const userExamProgressSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true,
         },
 
         exam: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Exam",
             required: true,
-            index: true,
         },
 
-        overallAccuracy: {
-            type: Number,
-            default: 0,
-            min: 0,
-            max: 100,
-        },
-
-        totalQuestionsSolved: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        totalCorrectAnswers: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        totalWrongAnswers: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        mockTestsAttempted: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        averageMockScore: {
-            type: Number,
-            default: 0,
-            min: 0,
-            max: 100,
+        isCurrent: {
+            type: Boolean,
+            default: false,
         },
 
         studyStreak: {
@@ -104,25 +25,27 @@ const userExamProgressSchema = new mongoose.Schema(
             min: 0,
         },
 
-        highestStudyStreak: {
+        longestStudyStreak: {
             type: Number,
             default: 0,
             min: 0,
         },
 
-        subjectProgress: {
-            type: [subjectProgressSchema],
-            default: [],
-        },
+        completedSubjects: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Subject",
+            },
+        ],
 
-        lastStudiedAt: {
+        lastActivity: {
             type: Date,
-            default: null,
+            default: Date.now,
         },
 
-        isArchived: {
-            type: Boolean,
-            default: false,
+        startedAt: {
+            type: Date,
+            default: Date.now,
         },
     },
     {
@@ -131,7 +54,13 @@ const userExamProgressSchema = new mongoose.Schema(
     }
 );
 
-// One progress document per user per exam
+/*
+=================================================
+Indexes
+=================================================
+*/
+
+// One progress record per user per exam
 userExamProgressSchema.index(
     {
         user: 1,
@@ -141,6 +70,17 @@ userExamProgressSchema.index(
         unique: true,
     }
 );
+
+// Fast lookup of a user's active exam
+userExamProgressSchema.index({
+    user: 1,
+    isCurrent: 1,
+});
+
+// Fast lookup of all users for an exam
+userExamProgressSchema.index({
+    exam: 1,
+});
 
 module.exports = mongoose.model(
     "UserExamProgress",

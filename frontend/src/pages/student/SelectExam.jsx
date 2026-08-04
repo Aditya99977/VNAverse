@@ -54,67 +54,31 @@ function SelectExam() {
                     </div>
                 )}
 
-                {groupedExams.Banking.length > 0 && (
-                    <section className="exam-section">
-                        <div className="section-title">
-                            🏦 Banking Exams
-                        </div>
+                {Object.entries(groupedExams).map(
+                    ([category, exams]) =>
+                        exams.length > 0 && (
+                            <section
+                                key={category}
+                                className="exam-section"
+                            >
+                                <div className="section-title">
+                                    {getCategoryIcon(category)} {category} Exams
+                                </div>
 
-                        <div className="exam-grid">
-                            {groupedExams.Banking.map((exam) => (
-                                <ExamCard
-                                    key={exam._id}
-                                    exam={exam}
-                                    selected={
-                                        selectedExam?._id === exam._id
-                                    }
-                                    onSelect={handleSelectExam}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {groupedExams.SSC.length > 0 && (
-                    <section className="exam-section">
-                        <div className="section-title">
-                            🏛 SSC Exams
-                        </div>
-
-                        <div className="exam-grid">
-                            {groupedExams.SSC.map((exam) => (
-                                <ExamCard
-                                    key={exam._id}
-                                    exam={exam}
-                                    selected={
-                                        selectedExam?._id === exam._id
-                                    }
-                                    onSelect={handleSelectExam}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {groupedExams.Railway.length > 0 && (
-                    <section className="exam-section">
-                        <div className="section-title">
-                            🚆 Railway Exams
-                        </div>
-
-                        <div className="exam-grid">
-                            {groupedExams.Railway.map((exam) => (
-                                <ExamCard
-                                    key={exam._id}
-                                    exam={exam}
-                                    selected={
-                                        selectedExam?._id === exam._id
-                                    }
-                                    onSelect={handleSelectExam}
-                                />
-                            ))}
-                        </div>
-                    </section>
+                                <div className="exam-grid">
+                                    {exams.map((exam) => (
+                                        <ExamCard
+                                            key={exam._id}
+                                            exam={exam}
+                                            selected={
+                                                selectedExam?._id === exam._id
+                                            }
+                                            onSelect={handleSelectExam}
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        )
                 )}
 
                 {selectedExam && (
@@ -143,6 +107,27 @@ function SelectExam() {
             </div>
         </div>
     );
+}
+
+/*
+==========================================
+Category Icons
+==========================================
+*/
+
+function getCategoryIcon(category) {
+    const icons = {
+        Banking: "🏦",
+        SSC: "🏛",
+        Railway: "🚆",
+        UPSC: "🏛️",
+        Defence: "🪖",
+        Teaching: "📚",
+        Insurance: "🛡️",
+        State: "🗺️",
+    };
+
+    return icons[category] || "📘";
 }
 
 export default SelectExam;

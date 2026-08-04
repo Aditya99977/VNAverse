@@ -1,113 +1,83 @@
 import api from "./api";
 
 /*
-==============================
+==================================================
 Start Mock Test
-==============================
+POST /api/test/start
+==================================================
 */
 
-export const startTest = async (exam = "General Mock Test") => {
-
-    const response = await api.post(
-
+export const startTest = async (payload) => {
+    const { data } = await api.post(
         "/test/start",
-
-        {
-
-            exam
-
-        }
-
+        payload
     );
 
-    return response.data;
-
+    return data;
 };
 
 /*
-==============================
+==================================================
 Submit Mock Test
-==============================
+POST /api/test/submit/:testId
+==================================================
 */
 
 export const submitTest = async (
-
     testId,
-
-    answers
-
+    payload
 ) => {
-
-    const response = await api.post(
-
+    const { data } = await api.post(
         `/test/submit/${testId}`,
-
-        {
-
-            answers
-
-        }
-
+        payload
     );
 
-    return response.data;
-
+    return data;
 };
 
 /*
-==============================
+==================================================
 Test History
-==============================
+GET /api/test/history
+==================================================
 */
 
 export const getHistory = async () => {
-
-    const response = await api.get(
-
+    const { data } = await api.get(
         "/test/history"
-
     );
 
-    return response.data;
-
+    return data;
 };
 
 /*
-==============================
+==================================================
 Performance Summary
-==============================
+GET /api/test/performance
+==================================================
 */
 
 export const getPerformance = async () => {
-
-    const response = await api.get(
-
+    const { data } = await api.get(
         "/test/performance"
-
     );
 
-    return response.data;
-
+    return data;
 };
 
 /*
-==============================
+==================================================
 Test Details
-==============================
+GET /api/test/:id
+==================================================
 */
 
 export const getTestDetails = async (
-
     testId
-
 ) => {
-
-    const response = await api.get(
-
+    const { data } = await api.get(
         `/test/${testId}`
-
     );
 
-    return response.data;
-
+    return data;
 };

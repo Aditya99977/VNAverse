@@ -14,7 +14,6 @@ import FormInput from "../components/FormInput";
 import PasswordInput from "../components/PasswordInput";
 import AuthButton from "../components/AuthButton";
 
-import { loginUser } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
 const loginSchema = z.object({
@@ -31,30 +30,67 @@ function AdminLogin() {
 
     const navigate = useNavigate();
 
-    const { login } = useAuth();
+    const { login, logout } = useAuth();
 
     const [loading, setLoading] = useState(false);
 
     const {
+
         register,
+
         handleSubmit,
+
         formState: { errors },
+
     } = useForm({
+
         resolver: zodResolver(loginSchema),
+
     });
 
-    const onSubmit = async (data) => {
+    /*
+    ==========================================
+    Admin Login
+    ==========================================
+    */
+
+    const onSubmit = async (formData) => {
+
+        if (loading) return;
 
         try {
 
             setLoading(true);
 
-            const response = await loginUser(data, true);
+            const response = await login(formData);
 
-            login(
-                response.token,
-                response.user
-            );
+            if (!response.success) {
+
+                toast.error(response.message);
+
+                return;
+
+            }
+
+            const user = response.data.user;
+
+            /*
+            ==========================================
+            Allow Only Admins
+            ==========================================
+            */
+
+            if (user.role !== "admin") {
+
+                await logout();
+
+                toast.error(
+                    "Access denied. Administrator account required."
+                );
+
+                return;
+
+            }
 
             toast.success("Welcome Administrator!");
 
@@ -69,8 +105,13 @@ function AdminLogin() {
         catch (error) {
 
             toast.error(
-                error.response?.data?.message ||
-                "Login Failed"
+
+                error?.response?.data?.message ||
+
+                error?.message ||
+
+                "Login failed. Please try again."
+
             );
 
         }

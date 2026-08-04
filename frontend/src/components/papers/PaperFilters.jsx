@@ -4,22 +4,122 @@ import {
     RotateCcw,
 } from "lucide-react";
 
+import { useMemo } from "react";
+
 function PaperFilters({
+
     filters,
+
     setFilters,
+
+    papers,
+
 }) {
 
-    const handleChange = (e) => {
+    /*
+    =====================================
+    Handle Change
+    =====================================
+    */
+
+    const handleChange = (event) => {
 
         setFilters({
 
             ...filters,
 
-            [e.target.name]: e.target.value,
+            [event.target.name]:
+                event.target.value,
 
         });
 
     };
+
+    /*
+    =====================================
+    Dynamic Options
+    =====================================
+    */
+
+    const subjects = useMemo(() => {
+
+        return [
+
+            ...new Set(
+
+                papers
+
+                    .map(
+
+                        (paper) =>
+
+                            paper.subject?.name
+
+                    )
+
+                    .filter(Boolean)
+
+            ),
+
+        ];
+
+    }, [papers]);
+
+    const years = useMemo(() => {
+
+        return [
+
+            ...new Set(
+
+                papers
+
+                    .map(
+
+                        (paper) => paper.year
+
+                    )
+
+                    .filter(Boolean)
+
+            ),
+
+        ].sort(
+
+            (a, b) => b - a
+
+        );
+
+    }, [papers]);
+
+    const languages = useMemo(() => {
+
+        return [
+
+            ...new Set(
+
+                papers
+
+                    .map(
+
+                        (paper) =>
+
+                            paper.language
+
+                    )
+
+                    .filter(Boolean)
+
+            ),
+
+        ];
+
+    }, [papers]);
+
+    /*
+    =====================================
+    Clear Filters
+    =====================================
+    */
 
     const clearFilters = () => {
 
@@ -27,11 +127,11 @@ function PaperFilters({
 
             search: "",
 
-            exam: "",
-
             subject: "",
 
             year: "",
+
+            language: "",
 
         });
 
@@ -40,11 +140,18 @@ function PaperFilters({
     return (
 
         <div
+
             className="rounded-4 p-4 mb-5"
+
             style={{
+
                 background: "#131D31",
-                border: "1px solid rgba(255,255,255,.08)",
+
+                border:
+                    "1px solid rgba(255,255,255,.08)",
+
             }}
+
         >
 
             {/* Header */}
@@ -52,17 +159,28 @@ function PaperFilters({
             <div className="d-flex align-items-center mb-4">
 
                 <div
+
                     className="rounded-circle d-flex align-items-center justify-content-center me-3"
+
                     style={{
+
                         width: 52,
+
                         height: 52,
-                        background: "rgba(37,99,235,.15)",
+
+                        background:
+                            "rgba(37,99,235,.15)",
+
                     }}
+
                 >
 
                     <Filter
+
                         size={24}
+
                         color="#2563EB"
+
                     />
 
                 </div>
@@ -77,7 +195,7 @@ function PaperFilters({
 
                     <p className="text-secondary mb-0">
 
-                        Quickly find previous year papers using the filters below.
+                        Search and filter previous year papers.
 
                     </p>
 
@@ -85,11 +203,11 @@ function PaperFilters({
 
             </div>
 
-            {/* Filters */}
-
             <div className="row g-4">
 
-                {/* Search */}
+                {/* =====================================
+                    Search
+                ===================================== */}
 
                 <div className="col-lg-3">
 
@@ -113,50 +231,39 @@ function PaperFilters({
                         />
 
                         <input
+
                             type="text"
+
                             name="search"
+
                             value={filters.search}
+
                             onChange={handleChange}
-                            placeholder="Search paper..."
+
+                            placeholder="Search papers..."
+
                             className="form-control ps-5 py-3"
+
                             style={{
+
                                 background: "#0F172A",
+
                                 color: "#fff",
-                                border: "1px solid rgba(255,255,255,.08)",
+
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+
                             }}
+
                         />
 
                     </div>
 
                 </div>
 
-                {/* Exam */}
-
-                <div className="col-lg-3">
-
-                    <label className="form-label text-light fw-semibold">
-
-                        Exam
-
-                    </label>
-
-                    <input
-                        type="text"
-                        name="exam"
-                        value={filters.exam}
-                        onChange={handleChange}
-                        placeholder="SSC CGL"
-                        className="form-control py-3"
-                        style={{
-                            background: "#0F172A",
-                            color: "#fff",
-                            border: "1px solid rgba(255,255,255,.08)",
-                        }}
-                    />
-
-                </div>
-
-                {/* Subject */}
+                {/* =====================================
+                    Subject
+                ===================================== */}
 
                 <div className="col-lg-3">
 
@@ -166,23 +273,62 @@ function PaperFilters({
 
                     </label>
 
-                    <input
-                        type="text"
+                    <select
+
                         name="subject"
+
                         value={filters.subject}
+
                         onChange={handleChange}
-                        placeholder="Reasoning"
-                        className="form-control py-3"
+
+                        className="form-select py-3"
+
                         style={{
+
                             background: "#0F172A",
+
                             color: "#fff",
-                            border: "1px solid rgba(255,255,255,.08)",
+
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+
                         }}
-                    />
+
+                    >
+
+                        <option value="">
+
+                            All Subjects
+
+                        </option>
+
+                        {
+
+                            subjects.map((subject) => (
+
+                                <option
+
+                                    key={subject}
+
+                                    value={subject}
+
+                                >
+
+                                    {subject}
+
+                                </option>
+
+                            ))
+
+                        }
+
+                    </select>
 
                 </div>
 
-                {/* Year */}
+                {/* =====================================
+                    Year
+                ===================================== */}
 
                 <div className="col-lg-3">
 
@@ -192,36 +338,146 @@ function PaperFilters({
 
                     </label>
 
-                    <input
-                        type="number"
+                    <select
+
                         name="year"
+
                         value={filters.year}
+
                         onChange={handleChange}
-                        placeholder="2025"
-                        className="form-control py-3"
+
+                        className="form-select py-3"
+
                         style={{
+
                             background: "#0F172A",
+
                             color: "#fff",
-                            border: "1px solid rgba(255,255,255,.08)",
+
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+
                         }}
-                    />
+
+                    >
+
+                        <option value="">
+
+                            All Years
+
+                        </option>
+
+                        {
+
+                            years.map((year) => (
+
+                                <option
+
+                                    key={year}
+
+                                    value={year}
+
+                                >
+
+                                    {year}
+
+                                </option>
+
+                            ))
+
+                        }
+
+                    </select>
+
+                </div>
+
+                {/* =====================================
+                    Language
+                ===================================== */}
+
+                <div className="col-lg-3">
+
+                    <label className="form-label text-light fw-semibold">
+
+                        Language
+
+                    </label>
+
+                    <select
+
+                        name="language"
+
+                        value={filters.language}
+
+                        onChange={handleChange}
+
+                        className="form-select py-3"
+
+                        style={{
+
+                            background: "#0F172A",
+
+                            color: "#fff",
+
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+
+                        }}
+
+                    >
+
+                        <option value="">
+
+                            All Languages
+
+                        </option>
+
+                        {
+
+                            languages.map((language) => (
+
+                                <option
+
+                                    key={language}
+
+                                    value={language}
+
+                                >
+
+                                    {language}
+
+                                </option>
+
+                            ))
+
+                        }
+
+                    </select>
 
                 </div>
 
             </div>
 
-            {/* Footer */}
+            {/* =====================================
+                Footer
+            ===================================== */}
 
             <div className="d-flex justify-content-end mt-4">
 
                 <button
+
                     className="btn btn-outline-light px-4 py-2"
+
                     onClick={clearFilters}
+
                 >
 
                     <RotateCcw
+
                         size={16}
+
                         className="me-2"
+
                     />
 
                     Clear Filters

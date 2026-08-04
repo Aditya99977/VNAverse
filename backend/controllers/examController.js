@@ -1,134 +1,246 @@
-const mongoose = require("mongoose");
+const examService = require("../services/examService");
 
-const Exam = require("../models/Exam");
-const User = require("../models/User");
-const UserExamProgress = require("../models/UserExamProgress");
+class ExamController {
+    /*
+    ==========================================
+    Get Active Exams
+    GET /api/exams
+    ==========================================
+    */
 
-// =============================================
-// Get All Active Exams
-// GET /api/exams
-// =============================================
-const getAllExams = async (req, res) => {
-    try {
-        const exams = await Exam.find({ isActive: true })
-            .sort({ category: 1, name: 1 })
-            .select("-__v");
+    async getActiveExams(req, res, next) {
+        try {
+            const exams =
+                await examService.getActiveExams();
 
-        return res.status(200).json({
-            success: true,
-            count: exams.length,
-            exams,
-        });
-    } catch (error) {
-        console.error("Get Exams Error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch exams.",
-        });
+            return res.status(200).json({
+                success: true,
+                count: exams.length,
+                data: exams,
+            });
+        } catch (error) {
+            next(error);
+        }
     }
-};
 
-// =============================================
-// Select Preferred Exam
-// PUT /api/exams/select
-// =============================================
-const selectPreferredExam = async (req, res) => {
-    try {
-        const { examId } = req.body;
+    /*
+    ==========================================
+    Get All Exams
+    GET /api/exams/all
+    ==========================================
+    */
 
-        if (!examId) {
-            return res.status(400).json({
-                success: false,
-                message: "Exam ID is required.",
+    async getAllExams(req, res, next) {
+        try {
+            const exams =
+                await examService.getAllExams();
+
+            return res.status(200).json({
+                success: true,
+                count: exams.length,
+                data: exams,
             });
+        } catch (error) {
+            next(error);
         }
-
-        if (!mongoose.Types.ObjectId.isValid(examId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid exam ID.",
-            });
-        }
-
-        // Check whether the selected exam exists
-        const exam = await Exam.findOne({
-            _id: examId,
-            isActive: true,
-        });
-
-        if (!exam) {
-            return res.status(404).json({
-                success: false,
-                message: "Exam not found.",
-            });
-        }
-
-        // Find logged-in user
-        const user = await User.findById(req.user.id);
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found.",
-            });
-        }
-
-        // Update preferred exam
-        user.preferredExam = exam._id;
-        await user.save();
-
-        // Check if progress already exists for this exam
-        let progress = await UserExamProgress.findOne({
-            user: user._id,
-            exam: exam._id,
-        });
-
-        let progressCreated = false;
-
-        // Create progress only once
-        if (!progress) {
-            progress = await UserExamProgress.create({
-                user: user._id,
-                exam: exam._id,
-
-                subjectProgress: exam.subjects.map((subject) => ({
-                    subject,
-                    accuracy: 0,
-                    questionsSolved: 0,
-                    correctAnswers: 0,
-                    wrongAnswers: 0,
-                    averageTime: 0,
-                })),
-            });
-
-            progressCreated = true;
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Preferred exam updated successfully.",
-
-            preferredExam: {
-                id: exam._id,
-                name: exam.name,
-                slug: exam.slug,
-                category: exam.category,
-            },
-
-            progressCreated,
-        });
-    } catch (error) {
-        console.error("Select Exam Error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to update preferred exam.",
-        });
     }
-};
 
-module.exports = {
-    getAllExams,
-    selectPreferredExam,
-};
+    /*
+    ==========================================
+    Get Exam By ID
+    GET /api/exams/:id
+    ==========================================
+    */
+
+    async getExamById(req, res, next) {
+        try {
+            const exam =
+                await examService.getExamById(
+                    req.params.id
+                );
+
+            return res.status(200).json({
+                success: true,
+                data: exam,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Create Exam
+    POST /api/exams
+    ==========================================
+    */
+
+    async createExam(req, res, next) {
+        try {
+            const exam =
+                await examService.createExam(
+                    req.body
+                );
+
+            return res.status(201).json({
+                success: true,
+                message:
+                    "Exam created successfully.",
+                data: exam,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Update Exam
+    PUT /api/exams/:id
+    ==========================================
+    */
+
+    async updateExam(req, res, next) {
+        try {
+            const exam =
+                await examService.updateExam(
+                    req.params.id,
+                    req.body
+                );
+
+            return res.status(200).json({
+                success: true,
+                message:
+                    "Exam updated successfully.",
+                data: exam,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Deactivate Exam
+    PATCH /api/exams/:id/status
+    ==========================================
+    */
+
+    async deactivateExam(req, res, next) {
+        try {
+            const exam =
+                await examService.deactivateExam(
+                    req.params.id
+                );
+
+            return res.status(200).json({
+                success: true,
+                message:
+                    "Exam deactivated successfully.",
+                data: exam,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Delete Exam
+    DELETE /api/exams/:id
+    ==========================================
+    */
+
+    async deleteExam(req, res, next) {
+        try {
+            await examService.deleteExam(
+                req.params.id
+            );
+
+            return res.status(200).json({
+                success: true,
+                message:
+                    "Exam deleted successfully.",
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Select / Switch Exam
+    PUT /api/exams/select
+    ==========================================
+    */
+
+    async selectExam(req, res, next) {
+        try {
+            const { examId } = req.body;
+
+            const progress =
+                await examService.selectExam(
+                    req.user.id,
+                    examId
+                );
+
+            return res.status(200).json({
+                success: true,
+                message:
+                    "Exam selected successfully.",
+                data: progress,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Get Current Exam
+    GET /api/exams/current
+    ==========================================
+    */
+
+    async getCurrentExam(req, res, next) {
+        try {
+            const currentExam =
+                await examService.getCurrentExam(
+                    req.user.id
+                );
+
+            return res.status(200).json({
+                success: true,
+                data: currentExam,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /*
+    ==========================================
+    Get User Exams
+    GET /api/exams/my-exams
+    ==========================================
+    */
+
+    async getUserExams(req, res, next) {
+        try {
+            const exams =
+                await examService.getUserExams(
+                    req.user.id
+                );
+
+            return res.status(200).json({
+                success: true,
+                count: exams.length,
+                data: exams,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+}
+
+module.exports = new ExamController();

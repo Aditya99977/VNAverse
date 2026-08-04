@@ -7,7 +7,7 @@ import {
     Title,
     Tooltip,
     Legend,
-    Filler
+    Filler,
 } from "chart.js";
 
 import { Line } from "react-chartjs-2";
@@ -25,23 +25,49 @@ ChartJS.register(
 
 function PerformanceChart({ data = [] }) {
 
+    /*
+    ==========================================
+    Prepare Chart Data
+    ==========================================
+    */
+
+    const labels =
+        data.length > 0
+            ? data.map((item) => {
+
+                if (!item?.date) {
+
+                    return "Unknown";
+
+                }
+
+                return new Date(item.date).toLocaleDateString();
+
+            })
+            : ["No Data"];
+
+    const scores =
+        data.length > 0
+            ? data.map((item) => {
+
+                const score = Number(item?.score ?? 0);
+
+                return Math.min(Math.max(score, 0), 100);
+
+            })
+            : [0];
+
     const chartData = {
 
-        labels:
-            data.length > 0
-                ? data.map(item =>
-                    new Date(item.date).toLocaleDateString()
-                )
-                : ["No Data"],
+        labels,
 
         datasets: [
+
             {
+
                 label: "Learning Progress",
 
-                data:
-                    data.length > 0
-                        ? data.map(item => item.score)
-                        : [0],
+                data: scores,
 
                 borderColor: "#3B82F6",
 
@@ -62,8 +88,10 @@ function PerformanceChart({ data = [] }) {
                 pointBorderColor: "#FFFFFF",
 
                 pointBorderWidth: 2,
-            }
-        ]
+
+            },
+
+        ],
 
     };
 
@@ -73,11 +101,19 @@ function PerformanceChart({ data = [] }) {
 
         maintainAspectRatio: false,
 
+        interaction: {
+
+            intersect: false,
+
+            mode: "index",
+
+        },
+
         plugins: {
 
             legend: {
 
-                display: false
+                display: false,
 
             },
 
@@ -89,7 +125,7 @@ function PerformanceChart({ data = [] }) {
 
                 borderWidth: 1,
 
-                titleColor: "#fff",
+                titleColor: "#FFFFFF",
 
                 bodyColor: "#CBD5E1",
 
@@ -97,7 +133,7 @@ function PerformanceChart({ data = [] }) {
 
                 displayColors: false,
 
-            }
+            },
 
         },
 
@@ -115,13 +151,17 @@ function PerformanceChart({ data = [] }) {
 
                     color: "#94A3B8",
 
-                }
+                },
 
             },
 
             y: {
 
                 beginAtZero: true,
+
+                min: 0,
+
+                max: 100,
 
                 grid: {
 
@@ -135,11 +175,11 @@ function PerformanceChart({ data = [] }) {
 
                     stepSize: 20,
 
-                }
+                },
 
-            }
+            },
 
-        }
+        },
 
     };
 

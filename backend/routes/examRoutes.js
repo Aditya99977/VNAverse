@@ -1,27 +1,95 @@
 const express = require("express");
 
+const examController = require("../controllers/examController");
+
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
+
 const router = express.Router();
 
-const {
-    getAllExams,
-    selectPreferredExam,
-} = require("../controllers/examController");
+/*
+==========================================
+Public Routes
+==========================================
+*/
 
-// Import Auth Middleware
-const authMiddleware = require("../middleware/authMiddleware");
+router.get(
+    "/",
+    examController.getActiveExams
+);
 
-// =============================================
-// Public Routes
-// =============================================
+router.get(
+    "/all",
+    examController.getAllExams
+);
 
-// Get All Active Exams
-router.get("/", getAllExams);
+/*
+==========================================
+Authenticated User Routes
+==========================================
+*/
 
-// =============================================
-// Protected Routes
-// =============================================
+router.put(
+    "/select",
+    authMiddleware,
+    examController.selectExam
+);
 
-// Select Preferred Exam
-router.put("/select", authMiddleware, selectPreferredExam);
+router.get(
+    "/current",
+    authMiddleware,
+    examController.getCurrentExam
+);
+
+router.get(
+    "/my-exams",
+    authMiddleware,
+    examController.getUserExams
+);
+
+/*
+==========================================
+Admin Routes
+==========================================
+*/
+
+router.post(
+    "/",
+    authMiddleware,
+    adminMiddleware,
+    examController.createExam
+);
+
+router.put(
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    examController.updateExam
+);
+
+router.patch(
+    "/:id/status",
+    authMiddleware,
+    adminMiddleware,
+    examController.deactivateExam
+);
+
+router.delete(
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    examController.deleteExam
+);
+
+/*
+==========================================
+Dynamic Routes (Keep Last)
+==========================================
+*/
+
+router.get(
+    "/:id",
+    examController.getExamById
+);
 
 module.exports = router;

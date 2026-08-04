@@ -1,65 +1,104 @@
 const jwt = require("jsonwebtoken");
 
-const authMiddleware = (req, res, next) => {
-    try {
-        const authHeader = req.headers.authorization;
+const AppError = require("../utils/AppError");
 
-        // Check Authorization Header
-        if (!authHeader) {
-            return res.status(401).json({
-                success: false,
-                message: "Access denied. Please login to continue.",
-            });
-        }
+const userRepository = require("../repositories/userRepository");
 
-        // Validate Bearer Token Format
-        if (!authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid authorization format.",
-            });
-        }
+const asyncHandler = require("../utils/asyncHandler");
 
-        const token = authHeader.split(" ")[1];
+const authMiddleware = asyncHandler(async (req, res, next) => {
 
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: "Authentication token is missing.",
-            });
-        }
+    /*
+    ==========================================
+    Authorization Header
+    ==========================================
+    */
 
-        // Verify JWT
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const authHeader = req.headers.authorization;
 
-        // Attach User Data
-        req.user = decoded;
-
-        next();
-    } catch (error) {
-        // Token Expired
-        if (error.name === "TokenExpiredError") {
-            return res.status(401).json({
-                success: false,
-                message: "Session expired. Please login again.",
-            });
-        }
-
-        // Invalid Token
-        if (error.name === "JsonWebTokenError") {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid authentication token.",
-            });
-        }
-
-        console.error("Auth Middleware Error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error.",
-        });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        throw new AppError(
+            "Access token is required.",
+            401
+        );
     }
-};
+
+    /*
+    ==========================================
+    Extract Token
+    ==========================================
+    */
+
+    const token = authHeader.split(" ")[1];
+
+    /*
+    ==========================================
+    Verify JWT
+    ==========================================
+    */
+
+    let decoded;
+
+    try {
+
+        decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+    } catch (error) {
+
+        throw new AppError(
+            "Invalid or expired token.",
+            401
+        );
+
+    }
+
+    /*
+    ==========================================
+    Find User
+    ==========================================
+    */
+
+    const user = await userRepository.findById(
+        decoded.id
+    );
+
+    if (!user) {
+        throw new AppError(
+            "User not found.",
+            404
+        );
+    }
+
+    /*
+    ==========================================
+    Account Status
+    ==========================================
+    */
+
+    if (user.status !== "active") {
+        throw new AppError(
+            "Your account has been blocked.",
+            403
+        );
+    }
+
+    /*
+    ==========================================
+    Attach User
+    ==========================================
+    */
+
+    req.user = {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+    };
+
+    next();
+
+});
 
 module.exports = authMiddleware;

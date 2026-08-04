@@ -4,7 +4,7 @@ import {
     FaBook,
     FaClipboardList,
     FaChartLine,
-    FaMedal
+    FaMedal,
 } from "react-icons/fa";
 
 function QuickActions() {
@@ -14,31 +14,36 @@ function QuickActions() {
     const actions = [
 
         {
+            id: "practice",
             title: "Practice",
             icon: <FaBook />,
             path: "/practice",
-            disabled: false
+            disabled: false,
         },
 
         {
+            id: "mock-tests",
             title: "Mock Tests",
             icon: <FaClipboardList />,
             path: "/mock-tests",
-            disabled: false
+            disabled: false,
         },
 
         {
+            id: "analytics",
             title: "Analytics",
             icon: <FaChartLine />,
             path: "/performance",
-            disabled: false
+            disabled: false,
         },
 
         {
+            id: "leaderboard",
             title: "Leaderboard",
             icon: <FaMedal />,
-            disabled: true
-        }
+            path: null,
+            disabled: true,
+        },
 
     ];
 
@@ -81,18 +86,26 @@ function QuickActions() {
 
                     {
 
-                        actions.map((action, index) => (
+                        actions.map((action) => (
 
                             <div
-                                key={index}
+                                key={action.id}
                                 className="col-6"
                             >
 
                                 <button
 
+                                    type="button"
+
                                     onClick={() => {
 
-                                        if (!action.disabled) {
+                                        if (
+
+                                            !action.disabled &&
+
+                                            action.path
+
+                                        ) {
 
                                             navigate(action.path);
 
@@ -120,10 +133,10 @@ function QuickActions() {
                                             : "pointer",
 
                                         opacity: action.disabled
-                                            ? .75
+                                            ? 0.75
                                             : 1,
 
-                                        transition: ".25s"
+                                        transition: ".25s",
                                     }}
 
                                 >

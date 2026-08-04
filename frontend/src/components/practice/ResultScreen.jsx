@@ -1,33 +1,62 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-function ResultScreen({
-    score,
-    questions,
-    retryPractice,
-}) {
+function ResultScreen({ result, retryPractice }) {
 
     const navigate = useNavigate();
 
-    const totalQuestions = questions.length;
+    /*
+    ==========================================
+    No Result
+    ==========================================
+    */
 
-    const accuracy = useMemo(() => {
+    if (!result) {
 
-        if (totalQuestions === 0) return 0;
+        return null;
 
-        return Math.round(
-            (score / totalQuestions) * 100
-        );
+    }
 
-    }, [score, totalQuestions]);
+    /*
+    ==========================================
+    Backend Result
+    ==========================================
+    */
+
+    const {
+
+        score = 0,
+
+        correctAnswers = 0,
+
+        wrongAnswers = 0,
+
+        skippedAnswers = 0,
+
+        totalQuestions = 0,
+
+        accuracy = 0,
+
+        totalTime = 0,
+
+    } = result;
+
+    /*
+    ==========================================
+    Performance
+    ==========================================
+    */
 
     const performance = useMemo(() => {
 
         if (accuracy >= 90) {
 
             return {
+
                 title: "Excellent",
+
                 color: "#22C55E",
+
             };
 
         }
@@ -35,8 +64,11 @@ function ResultScreen({
         if (accuracy >= 75) {
 
             return {
+
                 title: "Very Good",
+
                 color: "#3B82F6",
+
             };
 
         }
@@ -44,18 +76,40 @@ function ResultScreen({
         if (accuracy >= 60) {
 
             return {
+
                 title: "Good",
+
                 color: "#F59E0B",
+
             };
 
         }
 
         return {
+
             title: "Needs Improvement",
+
             color: "#EF4444",
+
         };
 
     }, [accuracy]);
+
+    /*
+    ==========================================
+    Time
+    ==========================================
+    */
+
+    const formattedTime = useMemo(() => {
+
+        const minutes = Math.floor(totalTime / 60);
+
+        const seconds = totalTime % 60;
+
+        return `${minutes}m ${seconds}s`;
+
+    }, [totalTime]);
 
     return (
 
@@ -80,8 +134,8 @@ function ResultScreen({
                 <div
                     className="mx-auto rounded-circle d-flex align-items-center justify-content-center mb-4"
                     style={{
-                        width: 140,
-                        height: 140,
+                        width: 150,
+                        height: 150,
                         border: `8px solid ${performance.color}`,
                         color: "#fff",
                         fontWeight: 700,
@@ -94,97 +148,141 @@ function ResultScreen({
                 </div>
 
                 <h2 className="text-white fw-bold">
+
                     Practice Completed
+
                 </h2>
 
                 <p className="text-white-50 mb-0">
-                    Review your performance and continue improving.
+
+                    Your practice has been evaluated successfully.
+
                 </p>
 
             </div>
 
-            {/* Stats */}
+            {/* Statistics */}
 
             <div className="p-5">
 
                 <div className="row g-4">
 
-                    <div className="col-md-4">
+                    <div className="col-md-3">
 
                         <div
-                            className="rounded-4 p-4 h-100 text-center"
+                            className="rounded-4 p-4 text-center h-100"
                             style={{
                                 background: "#0F172A",
                             }}
                         >
 
                             <h2
-                                className="fw-bold mb-2"
+                                className="fw-bold"
                                 style={{
-                                    color: performance.color,
+                                    color: "#22C55E",
                                 }}
                             >
+
+                                {correctAnswers}
+
+                            </h2>
+
+                            <p className="text-secondary mb-0">
+
+                                Correct
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div className="col-md-3">
+
+                        <div
+                            className="rounded-4 p-4 text-center h-100"
+                            style={{
+                                background: "#0F172A",
+                            }}
+                        >
+
+                            <h2
+                                className="fw-bold"
+                                style={{
+                                    color: "#EF4444",
+                                }}
+                            >
+
+                                {wrongAnswers}
+
+                            </h2>
+
+                            <p className="text-secondary mb-0">
+
+                                Wrong
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div className="col-md-3">
+
+                        <div
+                            className="rounded-4 p-4 text-center h-100"
+                            style={{
+                                background: "#0F172A",
+                            }}
+                        >
+
+                            <h2
+                                className="fw-bold"
+                                style={{
+                                    color: "#F59E0B",
+                                }}
+                            >
+
+                                {skippedAnswers}
+
+                            </h2>
+
+                            <p className="text-secondary mb-0">
+
+                                Skipped
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div className="col-md-3">
+
+                        <div
+                            className="rounded-4 p-4 text-center h-100"
+                            style={{
+                                background: "#0F172A",
+                            }}
+                        >
+
+                            <h2 className="text-white fw-bold">
+
                                 {score}
+
                             </h2>
 
                             <p className="text-secondary mb-0">
-                                Correct Answers
+
+                                Score
+
                             </p>
 
                         </div>
 
                     </div>
 
-                    <div className="col-md-4">
-
-                        <div
-                            className="rounded-4 p-4 h-100 text-center"
-                            style={{
-                                background: "#0F172A",
-                            }}
-                        >
-
-                            <h2 className="text-white fw-bold mb-2">
-                                {totalQuestions}
-                            </h2>
-
-                            <p className="text-secondary mb-0">
-                                Total Questions
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-4">
-
-                        <div
-                            className="rounded-4 p-4 h-100 text-center"
-                            style={{
-                                background: "#0F172A",
-                            }}
-                        >
-
-                            <h2
-                                className="fw-bold mb-2"
-                                style={{
-                                    color: performance.color,
-                                }}
-                            >
-                                {performance.title}
-                            </h2>
-
-                            <p className="text-secondary mb-0">
-                                Performance
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                {/* Accuracy */}
+                </div>                {/* Performance Summary */}
 
                 <div
                     className="rounded-4 p-4 mt-5"
@@ -193,7 +291,7 @@ function ResultScreen({
                     }}
                 >
 
-                    <div className="d-flex justify-content-between mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
 
                         <span className="text-white">
 
@@ -206,7 +304,9 @@ function ResultScreen({
                                 color: performance.color,
                             }}
                         >
+
                             {accuracy}%
+
                         </strong>
 
                     </div>
@@ -221,12 +321,130 @@ function ResultScreen({
 
                         <div
                             className="progress-bar"
+                            role="progressbar"
                             style={{
                                 width: `${accuracy}%`,
-                                background:
-                                    performance.color,
+                                background: performance.color,
                             }}
                         />
+
+                    </div>
+
+                    <div className="row mt-4 g-4">
+
+                        <div className="col-md-6">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background: "#131D31",
+                                }}
+                            >
+
+                                <small className="text-secondary d-block mb-2">
+
+                                    Performance
+
+                                </small>
+
+                                <h4
+                                    className="fw-bold mb-0"
+                                    style={{
+                                        color: performance.color,
+                                    }}
+                                >
+
+                                    {performance.title}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                        <div className="col-md-6">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background: "#131D31",
+                                }}
+                            >
+
+                                <small className="text-secondary d-block mb-2">
+
+                                    Time Taken
+
+                                </small>
+
+                                <h4 className="text-white fw-bold mb-0">
+
+                                    {formattedTime}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div className="row mt-4 g-4">
+
+                        <div className="col-md-6">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background: "#131D31",
+                                }}
+                            >
+
+                                <small className="text-secondary d-block mb-2">
+
+                                    Total Questions
+
+                                </small>
+
+                                <h4 className="text-white fw-bold mb-0">
+
+                                    {totalQuestions}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
+
+                        <div className="col-md-6">
+
+                            <div
+                                className="rounded-4 p-4 h-100"
+                                style={{
+                                    background: "#131D31",
+                                }}
+                            >
+
+                                <small className="text-secondary d-block mb-2">
+
+                                    Final Score
+
+                                </small>
+
+                                <h4
+                                    className="fw-bold mb-0"
+                                    style={{
+                                        color: performance.color,
+                                    }}
+                                >
+
+                                    {score}
+
+                                </h4>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
@@ -237,19 +455,23 @@ function ResultScreen({
                 <div className="d-flex justify-content-center gap-3 mt-5 flex-wrap">
 
                     <button
+                        type="button"
                         className="btn btn-primary btn-lg px-5"
                         onClick={retryPractice}
                     >
+
                         Retry Practice
+
                     </button>
 
                     <button
+                        type="button"
                         className="btn btn-outline-light btn-lg px-5"
-                        onClick={() =>
-                            navigate("/dashboard")
-                        }
+                        onClick={() => navigate("/dashboard")}
                     >
+
                         Back to Dashboard
+
                     </button>
 
                 </div>

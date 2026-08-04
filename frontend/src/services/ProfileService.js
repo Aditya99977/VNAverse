@@ -1,59 +1,51 @@
 import api from "./api";
 
 /*
-==============================
-Get Profile
-==============================
+==================================================
+Profile APIs
+==================================================
 */
 
+/**
+ * Get Logged-in User Profile
+ * GET /api/profile
+ */
 export const getProfile = async () => {
+    const { data } = await api.get("/profile");
 
-    const response = await api.get("/profile");
-
-    return response.data;
-
+    return data.data;
 };
 
-/*
-==============================
-Update Profile
-==============================
-*/
-
-export const updateProfile = async (data) => {
-
-    const response = await api.put("/profile", data);
-
-    return response.data;
-
-};
-
-/*
-==============================
-Upload Profile Image
-==============================
-*/
-
-export const uploadProfileImage = async (formData) => {
-
-    const response = await api.put(
-
-        "/profile/upload-profile-image",
-
-        formData,
-
-        {
-
-            headers: {
-
-                "Content-Type": "multipart/form-data",
-
-            },
-
-        }
-
+/**
+ * Update User Profile
+ * PUT /api/profile
+ */
+export const updateProfile = async (profileData) => {
+    const { data } = await api.put(
+        "/profile",
+        profileData
     );
 
-    return response.data;
+    return data.data;
+};
 
+/**
+ * Upload Profile Image
+ * PUT /api/profile/upload-profile-image
+ */
+export const uploadProfileImage = async (
+    formData
+) => {
+    const { data } = await api.put(
+        "/profile/upload-profile-image",
+        formData,
+        {
+            headers: {
+                "Content-Type":
+                    "multipart/form-data",
+            },
+        }
+    );
+
+    return data.data;
 };

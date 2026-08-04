@@ -2,70 +2,69 @@ import api from "./api";
 
 /*
 ========================================
-Login
-========================================
-*/
-
-export const loginUser = async (data, isAdmin = false) => {
-
-    const endpoint = isAdmin
-        ? "/auth/admin/login"
-        : "/auth/login";
-
-    const response = await api.post(endpoint, data);
-
-    return response.data;
-
-};
-
-/*
-========================================
 Register
 ========================================
 */
 
-export const registerUser = async (data) => {
-
+export const registerUser = async (userData) => {
     const response = await api.post(
-        "/auth/signup",
-        data
+        "/auth/register",
+        userData
     );
 
     return response.data;
-
 };
 
 /*
 ========================================
-Email Verification
+Login
 ========================================
 */
 
-export const verifyEmail = async (token) => {
-
-    const response = await api.get(
-        `/auth/verify-email/${token}`
+export const loginUser = async (credentials) => {
+    const response = await api.post(
+        "/auth/login",
+        credentials
     );
 
     return response.data;
-
 };
 
 /*
 ========================================
-Resend Verification Email
+Get Current User
 ========================================
 */
 
-export const resendVerificationEmail = async (email) => {
+export const getCurrentUser = async () => {
+    const response = await api.get("/auth/me");
 
-    const response = await api.post(
-        "/auth/resend-verification",
-        {
-            email,
-        }
+    return response.data;
+};
+
+/*
+========================================
+Logout
+========================================
+*/
+
+export const logoutUser = async () => {
+    const response = await api.post("/auth/logout");
+
+    return response.data;
+};
+
+/*
+========================================
+Change Password
+========================================
+*/
+
+export const changePassword = async (passwordData) => {
+    const response = await api.put(
+        "/auth/change-password",
+        passwordData
     );
 
     return response.data;
-
 };

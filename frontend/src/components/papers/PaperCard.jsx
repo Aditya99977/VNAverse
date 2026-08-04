@@ -1,15 +1,29 @@
 import {
     Download,
+    Eye,
     Calendar,
     BookOpen,
     GraduationCap,
     FileText,
+    Globe,
+    Crown,
 } from "lucide-react";
 
 function PaperCard({
+
     paper,
+
+    onView,
+
     onDownload,
+
 }) {
+
+    const examName =
+        paper.exam?.name || "N/A";
+
+    const subjectName =
+        paper.subject?.name || "General";
 
     return (
 
@@ -19,12 +33,15 @@ function PaperCard({
                 className="rounded-4 h-100 d-flex flex-column"
                 style={{
                     background: "#131D31",
-                    border: "1px solid rgba(255,255,255,.08)",
+                    border:
+                        "1px solid rgba(255,255,255,.08)",
                     transition: "all .25s ease",
                 }}
             >
 
-                {/* Header */}
+                {/* =====================================
+                    Header
+                ===================================== */}
 
                 <div className="p-4">
 
@@ -47,11 +64,32 @@ function PaperCard({
 
                         </div>
 
-                        <span className="badge bg-success rounded-pill">
+                        {
 
-                            {paper.status}
+                            paper.isPremium ? (
 
-                        </span>
+                                <span className="badge bg-warning text-dark rounded-pill">
+
+                                    <Crown
+                                        size={14}
+                                        className="me-1"
+                                    />
+
+                                    Premium
+
+                                </span>
+
+                            ) : (
+
+                                <span className="badge bg-success rounded-pill">
+
+                                    Free
+
+                                </span>
+
+                            )
+
+                        }
 
                     </div>
 
@@ -69,19 +107,25 @@ function PaperCard({
                     <p
                         className="text-secondary mb-0"
                         style={{
-                            minHeight: 70,
+                            minHeight: 72,
                         }}
                     >
 
-                        {paper.description ||
+                        {
 
-                            "No description available."}
+                            paper.description ||
+
+                            "No description available."
+
+                        }
 
                     </p>
 
                 </div>
 
-                {/* Details */}
+                {/* =====================================
+                    Details
+                ===================================== */}
 
                 <div className="px-4 pb-4">
 
@@ -113,7 +157,7 @@ function PaperCard({
 
                                         <div className="text-white">
 
-                                            {paper.exam}
+                                            {examName}
 
                                         </div>
 
@@ -147,7 +191,7 @@ function PaperCard({
 
                                 <div className="text-white">
 
-                                    {paper.subject}
+                                    {subjectName}
 
                                 </div>
 
@@ -183,31 +227,137 @@ function PaperCard({
 
                             </div>
 
+                        </div>                        <div className="col-6">
+
+                            <div
+                                className="rounded-3 p-3"
+                                style={{
+                                    background: "#0F172A",
+                                }}
+                            >
+
+                                <Globe
+                                    size={18}
+                                    className="text-primary mb-2"
+                                />
+
+                                <small className="text-secondary d-block">
+
+                                    Language
+
+                                </small>
+
+                                <div className="text-white">
+
+                                    {paper.language}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div className="col-6">
+
+                            <div
+                                className="rounded-3 p-3"
+                                style={{
+                                    background: "#0F172A",
+                                }}
+                            >
+
+                                <Eye
+                                    size={18}
+                                    className="text-primary mb-2"
+                                />
+
+                                <small className="text-secondary d-block">
+
+                                    Views
+
+                                </small>
+
+                                <div className="text-white">
+
+                                    {paper.views ?? 0}
+
+                                </div>
+
+                            </div>
+
                         </div>
 
                     </div>
 
                 </div>
 
-                {/* Footer */}
+                {/* =====================================
+                    Footer
+                ===================================== */}
 
                 <div className="mt-auto p-4">
 
-                    <button
-                        className="btn btn-primary w-100 py-3 fw-semibold"
-                        onClick={() =>
-                            onDownload(paper._id)
-                        }
-                    >
+                    <div className="d-grid gap-2">
 
-                        <Download
-                            size={18}
-                            className="me-2"
-                        />
+                        <button
 
-                        Download PDF
+                            className="btn btn-outline-light"
 
-                    </button>
+                            onClick={() =>
+
+                                onView()
+
+                            }
+
+                        >
+
+                            <Eye
+                                size={18}
+                                className="me-2"
+                            />
+
+                            View Paper
+
+                        </button>
+
+                        <button
+
+                            className="btn btn-primary"
+
+                            onClick={() =>
+
+                                onDownload()
+
+                            }
+
+                        >
+
+                            <Download
+                                size={18}
+                                className="me-2"
+                            />
+
+                            Download PDF
+
+                        </button>
+
+                    </div>
+
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+
+                        <small className="text-secondary">
+
+                            Downloads
+
+                        </small>
+
+                        <span className="text-white fw-semibold">
+
+                            {paper.downloads ?? 0}
+
+                        </span>
+
+                    </div>
 
                 </div>
 

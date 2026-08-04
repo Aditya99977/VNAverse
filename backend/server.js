@@ -9,7 +9,14 @@ const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const morgan = require("morgan");
 
+const practiceRoutes = require("./routes/practiceRoutes");
+
+// =============================================
+// Environment Validation
+// =============================================
+
 const requiredEnvironmentVariables = ["MONGO_URI", "JWT_SECRET"];
+
 const missingEnvironmentVariables = requiredEnvironmentVariables.filter(
     (name) => !process.env[name]
 );
@@ -22,17 +29,20 @@ if (missingEnvironmentVariables.length > 0) {
     );
 }
 
+// =============================================
 // Routes
-const authRoutes = require("./routes/auth");
-const dashboardRoutes = require("./routes/dashboard");
-const profileRoutes = require("./routes/Profile");
-const questionRoutes = require("./routes/question");
-const testRoutes = require("./routes/test");
-const adminRoutes = require("./routes/admin");
-const mockTestRoutes = require("./routes/MockTestRoute");
+// =============================================
+
+const authRoutes = require("./routes/authRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const profileRoutes = require("./routes/ProfileRoutes");
+const questionRoutes = require("./routes/questionRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const mockTestRoutes = require("./routes/MockTestRoutes");
 const paperRoutes = require("./routes/paperRoutes");
 const examRoutes = require("./routes/examRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
+const performanceRoutes = require("./routes/performanceRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -97,8 +107,7 @@ app.use(
 );
 
 // =============================================
-// Body Parser Middleware
-// IMPORTANT: Must come BEFORE routes
+// Body Parser
 // =============================================
 
 app.use(express.json({ limit: "1mb" }));
@@ -129,12 +138,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/questions", questionRoutes);
-app.use("/api/test", testRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/mocktests", mockTestRoutes);
 app.use("/api/papers", paperRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/subjects", subjectRoutes);
+app.use("/api/practice", practiceRoutes);
+app.use("/api/performance", performanceRoutes);
 
 // =============================================
 // Root Route
@@ -212,7 +222,7 @@ async function startServer() {
 
         const server = app.listen(PORT, () => {
             console.log(
-                `VNAverse API is running on port ${PORT}`
+                `🚀 VNAverse API is running on port ${PORT}`
             );
         });
 

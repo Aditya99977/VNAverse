@@ -5,24 +5,40 @@ function WelcomeCard({ user }) {
 
     const navigate = useNavigate();
 
+    /*
+    ==========================================
+    Greeting
+    ==========================================
+    */
+
     const greeting = () => {
 
         const hour = new Date().getHours();
 
         if (hour < 12) return "Good Morning";
+
         if (hour < 17) return "Good Afternoon";
 
         return "Good Evening";
 
     };
 
+    /*
+    ==========================================
+    Study Streak Message
+    ==========================================
+    */
+
     const getStreakMessage = () => {
 
         const streak = user?.studyStreak || 0;
 
         if (streak === 0) return "Start your learning streak today 🚀";
+
         if (streak <= 3) return "Great start! Keep learning 🔥";
+
         if (streak <= 7) return "Consistency is your superpower 💪";
+
         if (streak <= 29) return "Amazing dedication! Keep it up 🚀";
 
         return "You're unstoppable 👑";
@@ -107,20 +123,18 @@ function WelcomeCard({ user }) {
                         >
                             Continue your learning journey
 
-                            {user?.examTarget && (
+                            {user?.preferredExam?.name && (
                                 <>
                                     {" "}towards{" "}
-                                    <strong>{user.examTarget}</strong>
+                                    <strong>{user.preferredExam.name}</strong>
                                 </>
                             )}
 
-                            . Every learning session helps you build
-                            stronger skills and move closer to your goals.
+                            . Every learning session helps you build stronger
+                            skills and move closer to your goals.
                         </p>
 
                         <div className="d-flex flex-wrap gap-3">
-
-                            {/* Study Streak */}
 
                             <div
                                 className="px-4 py-3 rounded-4"
@@ -146,9 +160,7 @@ function WelcomeCard({ user }) {
 
                                 </div>
 
-                                <h3
-                                    className="text-white fw-bold mb-1"
-                                >
+                                <h3 className="text-white fw-bold mb-1">
                                     🔥 {user?.studyStreak || 0} Day{(user?.studyStreak || 0) !== 1 ? "s" : ""}
                                 </h3>
 

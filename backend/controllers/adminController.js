@@ -1,138 +1,160 @@
 const fs = require("fs");
 const csv = require("csv-parser");
+const mongoose = require("mongoose");
 
 const Question = require("../models/Question");
 const User = require("../models/User");
-const Test = require("../models/Test");
+const Test = require("../models/MockTestAttempt");
+
+const asyncHandler = require("../utils/asyncHandler");
+const ApiResponse = require("../utils/ApiResponse");
 
 /*
-========================================
-Admin Test Route
-========================================
+==================================================
+Admin Test
+==================================================
 */
 
-exports.adminTest = async (req, res) => {
+exports.adminTest = asyncHandler(async (req, res) => {
 
-    res.json({
-        message: "Welcome Admin"
-    });
+    return res.status(200).json(
 
-};
+        ApiResponse.success(
+
+            "Welcome Admin"
+
+        )
+
+    );
+
+});
 
 /*
-========================================
+==================================================
 Update Question
-========================================
+==================================================
 */
 
-exports.updateQuestion = async (req, res) => {
+exports.updateQuestion = asyncHandler(async (req, res) => {
 
-    try {
+    const question = await Question.findByIdAndUpdate(
 
-        const question = await Question.findByIdAndUpdate(
+        req.params.id,
 
-            req.params.id,
+        req.body,
 
-            req.body,
+        {
 
-            {
-                new: true,
-                runValidators: true
-            }
+            new: true,
+
+            runValidators: true,
+
+        }
+
+    );
+
+    if (!question) {
+
+        return res.status(404).json(
+
+            ApiResponse.error(
+
+                "Question not found."
+
+            )
 
         );
 
-        if (!question) {
+    }
 
-            return res.status(404).json({
-                message: "Question not found"
-            });
+    return res.status(200).json(
 
-        }
+        ApiResponse.success(
 
-        res.json({
-
-            message: "Question updated successfully",
+            "Question updated successfully.",
 
             question
 
-        });
+        )
 
-    }
+    );
 
-    catch (err) {
-
-        res.status(500).json({
-
-            message: err.message
-
-        });
-
-    }
-
-};
+});
 
 /*
-========================================
+==================================================
 Delete Question
-========================================
+==================================================
 */
 
-exports.deleteQuestion = async (req, res) => {
+exports.deleteQuestion = asyncHandler(async (req, res) => {
 
-    try {
+    const question = await Question.findByIdAndDelete(
 
-        const question = await Question.findByIdAndDelete(req.params.id);
+        req.params.id
 
-        if (!question) {
+    );
 
-            return res.status(404).json({
+    if (!question) {
 
-                message: "Question not found"
+        return res.status(404).json(
 
-            });
+            ApiResponse.error(
 
-        }
+                "Question not found."
 
-        res.json({
+            )
 
-            message: "Question deleted successfully"
-
-        });
+        );
 
     }
 
-    catch (err) {
+    return res.status(200).json(
 
-        res.status(500).json({
+        ApiResponse.success(
 
-            message: err.message
+            "Question deleted successfully."
 
-        });
+        )
 
-    }
+    );
 
-};
+});
 
 /*
-========================================
+==================================================
 Admin Dashboard
-========================================
+==================================================
 */
 
-exports.getAdminDashboard = async (req, res) => {
+exports.getAdminDashboard = asyncHandler(async (req, res) => {
 
-    try {
+    const [
 
-        const totalUsers = await User.countDocuments();
+        totalUsers,
 
-        const totalQuestions = await Question.countDocuments();
+        totalQuestions,
 
-        const totalTests = await Test.countDocuments();
+        totalTests,
 
-        const subjectStats = await Question.aggregate([
+        subjectStats,
+
+        averageScore
+
+    ] = await Promise.all([
+
+        User.countDocuments(),
+
+        Question.countDocuments(),
+
+        MockTestAttempt.countDocuments({
+    status: "completed",
+}),
+
+        Question.aggregate([
 
             {
+
                 $group: {
 
                     _id: "$subject",
@@ -157,9 +179,14 @@ exports.getAdminDashboard = async (req, res) => {
 
             }
 
-        ]);
+        ]),
 
-        const averageScore = await Test.aggregate([
+        MockTestAttempt.aggregate([
+             {
+        $match: {
+            status: "completed",
+        },
+    },
 
             {
 
@@ -177,49 +204,69 @@ exports.getAdminDashboard = async (req, res) => {
 
             }
 
-        ]);
+        ])
 
-        res.json({
+    ]);
 
-            totalUsers,
+    return res.status(200).json(
 
-            totalQuestions,
+        ApiResponse.success(
 
-            totalTests,
+            "Dashboard fetched successfully.",
 
-            averageScore: averageScore.length
-                ? averageScore[0].average.toFixed(2)
-                : 0,
+            {
 
-            subjectStats
+                totalUsers,
 
-        });
+                totalQuestions,
 
-    }
+                totalTests,
 
-    catch (err) {
+                averageScore:
 
-        res.status(500).json({
+                    averageScore.length > 0
 
-            message: err.message
+                        ? Number(
 
-        });
+                            averageScore[0].average.toFixed(2)
 
-    }
+                        )
 
-};
+                        : 0,
+
+                subjectStats,
+
+            }
+
+        )
+
+    );
+
+});
 
 /*
-========================================
+==================================================
 Bulk CSV Upload
-========================================
+==================================================
 */
 
-exports.uploadCSV = async (req, res) => {
+exports.uploadCSV = asyncHandler(async (req, res) => {
 
-    try {
+    if (!req.file) {
 
-        const questions = [];
+        return res.status(400).json(
+
+            ApiResponse.error(
+
+                "Please upload a CSV file."
+
+            )
+
+        );
+
+    }
+
+    const questions = [];    await new Promise((resolve, reject) => {
 
         fs.createReadStream(req.file.path)
 
@@ -239,7 +286,7 @@ exports.uploadCSV = async (req, res) => {
 
                         row.option3,
 
-                        row.option4
+                        row.option4,
 
                     ],
 
@@ -247,81 +294,113 @@ exports.uploadCSV = async (req, res) => {
 
                     subject: row.subject,
 
-                    difficulty: row.difficulty
+                    difficulty: row.difficulty,
 
                 });
 
             })
 
-            .on("end", async () => {
+            .on("end", resolve)
 
-                await Question.insertMany(questions);
+            .on("error", reject);
 
-                fs.unlinkSync(req.file.path);
+    });
 
-                res.json({
+    if (!questions.length) {
 
-                    message: `${questions.length} questions uploaded successfully`
+        fs.unlinkSync(req.file.path);
 
-                });
+        return res.status(400).json(
 
-            });
+            ApiResponse.error(
+
+                "CSV file does not contain any questions."
+
+            )
+
+        );
 
     }
 
-    catch (err) {
+    await Question.insertMany(
 
-        res.status(500).json({
+        questions,
 
-            message: err.message
+        {
+
+            ordered: false,
+
+        }
+
+    );
+
+    if (fs.existsSync(req.file.path)) {
+
+        fs.unlinkSync(req.file.path);
+
+    }
+
+    return res.status(200).json(
+
+        ApiResponse.success(
+
+            `${questions.length} questions uploaded successfully.`
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Get All Users
+==================================================
+*/
+
+exports.getAllUsers = asyncHandler(async (req, res) => {
+
+    const users = await User.find()
+
+        .select("-password")
+
+        .sort({
+
+            createdAt: -1,
 
         });
 
-    }
+    const result = await Promise.all(
 
-};
+        users.map(async (user) => {
 
-/*
-========================================
-Get All Users
-========================================
-*/
+            const tests = await MockTestAttempt.find({
 
-exports.getAllUsers = async (req, res) => {
+                user: user._id,
 
-    try {
-
-        const users = await User.find()
-            .select("-password")
-            .sort({
-
-                createdAt: -1
+                submitted: true,
 
             });
 
-        const result = await Promise.all(
+            const totalTests = tests.length;
 
-            users.map(async (user) => {
+            const averageScore =
 
-                const tests = await Test.find({
-
-                    user: user._id,
-
-                    submitted: true
-
-                });
-
-                const totalTests = tests.length;
-
-                const averageScore = totalTests
+                totalTests > 0
 
                     ? Number(
 
                         (
 
-                            tests.reduce((sum, test) => sum + test.score, 0)
+                            tests.reduce(
 
-                            / totalTests
+                                (sum, test) =>
+
+                                    sum + test.score,
+
+                                0
+
+                            ) / totalTests
 
                         ).toFixed(2)
 
@@ -329,184 +408,228 @@ exports.getAllUsers = async (req, res) => {
 
                     : 0;
 
-                const highestScore = totalTests
+            const highestScore =
 
-                    ? Math.max(...tests.map(test => test.score))
+                totalTests > 0
+
+                    ? Math.max(
+
+                        ...tests.map(
+
+                            test => test.score
+
+                        )
+
+                    )
 
                     : 0;
 
-                return {
+            return {
 
-                    ...user.toObject(),
+                ...user.toObject(),
 
-                    totalTests,
+                totalTests,
 
-                    averageScore,
+                averageScore,
 
-                    highestScore
+                highestScore,
 
-                };
-
-            })
-
-        );
-
-        res.json(result);
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            message: err.message
-
-        });
-
-    }
-
-};
-
-/*
-========================================
-Get User Details
-========================================
-*/
-
-exports.getUserDetails = async (req, res) => {
-
-    try {
-
-        const user = await User.findById(req.params.id)
-
-            .select("-password");
-
-        if (!user) {
-
-            return res.status(404).json({
-
-                message: "User not found"
-
-            });
-
-        }
-
-        const tests = await Test.find({
-
-            user: user._id
+            };
 
         })
 
-            .populate("questions")
+    );
 
-            .sort({
+    return res.status(200).json(
 
-                createdAt: -1
+        ApiResponse.success(
 
-            });
+            "Users fetched successfully.",
 
-        res.json({
+            result
 
-            user,
+        )
 
-            tests
+    );
 
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            message: err.message
-
-        });
-
-    }
-
-};
+});
 
 /*
-========================================
-Delete User
-========================================
+==================================================
+Get User Details
+==================================================
 */
 
-exports.deleteUser = async (req, res) => {
+exports.getUserDetails = asyncHandler(async (req, res) => {
+
+    const user = await User.findById(
+
+        req.params.id
+
+    ).select("-password");
+
+    if (!user) {
+
+        return res.status(404).json(
+
+            ApiResponse.error(
+
+                "User not found."
+
+            )
+
+        );
+
+    }
+
+    const tests = await MockTestAttempt.find({
+
+        user: user._id,
+
+    })
+
+        .populate("questions")
+
+        .sort({
+
+            createdAt: -1,
+
+        });
+
+    return res.status(200).json(
+
+        ApiResponse.success(
+
+            "User details fetched successfully.",
+
+            {
+
+                user,
+
+                tests,
+
+            }
+
+        )
+
+    );
+
+});
+
+/*
+==================================================
+Delete User
+==================================================
+*/exports.deleteUser = asyncHandler(async (req, res) => {
+
+    const session = await mongoose.startSession();
+
+    session.startTransaction();
 
     try {
 
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(req.params.id).session(session);
 
         if (!user) {
 
-            return res.status(404).json({
+            await session.abortTransaction();
 
-                message: "User not found"
+            session.endSession();
 
-            });
+            return res.status(404).json(
+
+                ApiResponse.error(
+
+                    "User not found."
+
+                )
+
+            );
 
         }
 
-        await Test.deleteMany({
+        await MockTestAttempt.deleteMany(
 
-            user: req.params.id
+            {
 
-        });
+                user: req.params.id,
 
-        await User.findByIdAndDelete(req.params.id);
+            },
 
-        res.json({
+            {
 
-            message: "User deleted successfully"
+                session,
 
-        });
+            }
+
+        );
+
+        await User.findByIdAndDelete(
+
+            req.params.id,
+
+            {
+
+                session,
+
+            }
+
+        );
+
+        await session.commitTransaction();
+
+        session.endSession();
+
+        return res.status(200).json(
+
+            ApiResponse.success(
+
+                "User deleted successfully."
+
+            )
+
+        );
 
     }
 
-    catch (err) {
+    catch (error) {
 
-        res.status(500).json({
+        await session.abortTransaction();
 
-            message: err.message
+        session.endSession();
 
-        });
+        throw error;
 
     }
 
-};
+});
 
 /*
-========================================
+==================================================
 Get All Questions
-========================================
+==================================================
 */
 
-exports.getAllQuestions = async (req, res) => {
+exports.getAllQuestions = asyncHandler(async (req, res) => {
 
-    try {
+    const questions = await Question.find()
 
-        const questions = await Question.find()
+        .sort({
 
-            .sort({
-
-                createdAt: -1
-
-            });
-
-        res.json(questions);
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            message: err.message
+            createdAt: -1,
 
         });
 
-    }
+    return res.status(200).json(
 
-};
+        ApiResponse.success(
+
+            "Questions fetched successfully.",
+
+            questions
+
+        )
+
+    );
+
+});

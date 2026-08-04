@@ -24,9 +24,10 @@ function Profile() {
         const fetchProfile = async () => {
             try {
                 const data = await getProfile();
+                console.log("PROFILE", data);
                 setProfile(data);
             } catch (err) {
-                console.error(err);
+                console.error("Profile Error:", err);
             } finally {
                 setLoading(false);
             }
@@ -47,6 +48,13 @@ function Profile() {
     const imageUrl = profile?.profileImage
         ? `${API_ORIGIN}/uploads/${profile.profileImage}`
         : null;
+
+    const memberSince = profile?.createdAt
+        ? new Date(profile.createdAt).toLocaleDateString("en-IN", {
+              month: "long",
+              year: "numeric",
+          })
+        : "N/A";
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -76,16 +84,15 @@ function Profile() {
 
     const stats = [
         [
-            "Preferred Exam",
-            profile.preferredExam?.name || "Not Selected",
+            "Current Exam",
+            profile.currentExam?.name || "Select your first exam",
         ],
         [
-            "Questions Solved",
-            profile.studyStats?.questionsSolved ?? 0,
-        ],
-        [
-            "Study Streak",
-            `${profile.studyStreak ?? 0} Days`,
+            "Role",
+            profile.role
+                ? profile.role.charAt(0).toUpperCase() +
+                  profile.role.slice(1)
+                : "Student",
         ],
         [
             "Tests Attempted",
@@ -96,8 +103,15 @@ function Profile() {
             profile.highestScore ?? 0,
         ],
         [
+            "Member Since",
+            memberSince,
+        ],
+        [
             "Account Status",
-            profile.status || "Active",
+            profile.status
+                ? profile.status.charAt(0).toUpperCase() +
+                  profile.status.slice(1)
+                : "Active",
         ],
     ];
 
@@ -179,6 +193,7 @@ function Profile() {
                                                 color: "#fff",
                                                 border:
                                                     "3px solid white",
+                                                fontSize: "16px",
                                             }}
                                         >
                                             📷
@@ -206,8 +221,24 @@ function Profile() {
                                         {profile.email}
                                     </p>
 
+                                    <span
+                                        className="badge rounded-pill px-3 py-2 mt-2"
+                                        style={{
+                                            background:
+                                                profile.status === "active"
+                                                    ? "#16A34A"
+                                                    : "#DC2626",
+                                            fontSize: "14px",
+                                        }}
+                                    >
+                                        {profile.status
+                                            ?.charAt(0)
+                                            .toUpperCase() +
+                                            profile.status?.slice(1)}
+                                    </span>
+
                                     {uploading && (
-                                        <p className="text-white mb-0">
+                                        <p className="text-white mt-3 mb-0">
                                             Uploading image...
                                         </p>
                                     )}
@@ -226,6 +257,8 @@ function Profile() {
                                                         style={{
                                                             background:
                                                                 "#182338",
+                                                            transition:
+                                                                "all .25s ease",
                                                         }}
                                                     >
                                                         <small
@@ -246,7 +279,20 @@ function Profile() {
                                         )}
                                     </div>
 
-                                    <div className="text-center mt-5">
+                                    <div className="d-flex justify-content-center gap-3 flex-wrap mt-5">
+                                        <button
+                                            className="btn btn-outline-light rounded-pill px-5 py-3 fw-semibold"
+                                            onClick={() =>
+                                                navigate("/select-exam", {
+                                                    state: {
+                                                        from: "/profile",
+                                                    },
+                                                })
+                                            }
+                                        >
+                                            Change Exam
+                                        </button>
+
                                         <button
                                             className="btn btn-primary rounded-pill px-5 py-3 fw-semibold"
                                             style={{
@@ -255,9 +301,7 @@ function Profile() {
                                                 border: "none",
                                             }}
                                             onClick={() =>
-                                                navigate(
-                                                    "/edit-profile"
-                                                )
+                                                navigate("/edit-profile")
                                             }
                                         >
                                             Edit Profile

@@ -1,89 +1,70 @@
 const express = require("express");
-const router = express.Router();
+
+const subjectController = require("../controllers/subjectController");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 
-const {
-  getRecommendedSubjects,
-  getSubjectsByExam,
-  createSubject,
-  getAllSubjects,
-  getSubjectById,
-  updateSubject,
-  deleteSubject,
-} = require("../controllers/subjectController");
+const router = express.Router();
 
 /*
-=========================================
-Subject Routes
-=========================================
+==========================================
+Public Routes
+==========================================
 */
 
-/*
-=========================================
-Student Routes
-=========================================
-*/
-
-// Get recommended subjects
 router.get(
-  "/recommended",
-  authMiddleware,
-  getRecommendedSubjects
+    "/",
+    subjectController.getAllSubjects
 );
 
-// Get subjects by exam
 router.get(
-  "/exam/:examId",
-  authMiddleware,
-  getSubjectsByExam
+    "/exam/:examId",
+    subjectController.getSubjectsByExam
+);
+
+router.get(
+    "/:id",
+    subjectController.getSubjectById
 );
 
 /*
-=========================================
+==========================================
+Authenticated User
+==========================================
+*/
+
+router.get(
+    "/recommended/me",
+    authMiddleware,
+    subjectController.getRecommendedSubjects
+);
+
+/*
+==========================================
 Admin Routes
-=========================================
+==========================================
 */
 
-// Get all subjects
-router.get(
-  "/",
-  authMiddleware,
-  adminMiddleware,
-  getAllSubjects
-);
-
-// Get subject by id
-router.get(
-  "/:id",
-  authMiddleware,
-  adminMiddleware,
-  getSubjectById
-);
-
-// Create subject
 router.post(
-  "/",
-  authMiddleware,
-  adminMiddleware,
-  createSubject
+    "/",
+    authMiddleware,
+    adminMiddleware,
+    subjectController.createSubject
 );
 
-// Update subject
 router.put(
-  "/:id",
-  authMiddleware,
-  adminMiddleware,
-  updateSubject
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    subjectController.updateSubject
 );
 
-// Soft delete subject
 router.delete(
-  "/:id",
-  authMiddleware,
-  adminMiddleware,
-  deleteSubject
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    subjectController.deleteSubject
 );
 
 module.exports = router;

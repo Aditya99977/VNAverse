@@ -1,65 +1,96 @@
 const mongoose = require("mongoose");
 
 const subjectSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Subject name is required."],
-      trim: true,
-      maxlength: [100, "Subject name cannot exceed 100 characters."],
-    },
+    {
+        exam: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Exam",
+            required: true,
+            index: true,
+        },
 
-    slug: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+            maxlength: 100,
+        },
 
-    exam: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Exam",
-      required: [true, "Exam reference is required."],
-      index: true,
-    },
+        slug: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+        },
 
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-      maxlength: [500, "Description cannot exceed 500 characters."],
-    },
+        shortName: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 30,
+        },
 
-    icon: {
-      type: String,
-      default: "book",
-      trim: true,
-    },
+        description: {
+            type: String,
+            default: "",
+            trim: true,
+            maxlength: 1000,
+        },
 
-    color: {
-      type: String,
-      default: "#2563EB",
-      trim: true,
-    },
+        icon: {
+            type: String,
+            default: "book",
+        },
 
-    order: {
-      type: Number,
-      default: 1,
-      min: 1,
-    },
+        color: {
+            type: String,
+            default: "#2563EB",
+        },
 
-    isActive: {
-      type: Boolean,
-      default: true,
-      index: true,
+        displayOrder: {
+            type: Number,
+            default: 1,
+        },
+
+        totalQuestions: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true,
+            index: true,
+        },
     },
-  },
-  {
-    timestamps: true,
-  }
+    {
+        timestamps: true,
+        versionKey: false,
+    }
 );
 
-subjectSchema.index({ exam: 1, order: 1 });
-subjectSchema.index({ exam: 1, slug: 1 }, { unique: true });
+/*
+================================================
+Indexes
+================================================
+*/
+
+subjectSchema.index({
+    exam: 1,
+    slug: 1,
+}, {
+    unique: true,
+});
+
+subjectSchema.index({
+    exam: 1,
+    displayOrder: 1,
+});
+
+subjectSchema.index({
+    exam: 1,
+    isActive: 1,
+});
 
 module.exports = mongoose.model("Subject", subjectSchema);
