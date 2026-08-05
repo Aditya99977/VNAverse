@@ -20,80 +20,113 @@ function DeletePaperModal({
 
         <>
 
+            {/* ======================================
+                Backdrop
+            ====================================== */}
+
             <div
-                className="modal fade show"
-                style={{
-                    display: "block",
-                    background: "rgba(0,0,0,.6)",
-                }}
+                className="modal-backdrop fade show"
+                onClick={onClose}
+            />
+
+            {/* ======================================
+                Modal
+            ====================================== */}
+
+            <div
+                className="modal fade show d-block"
+                tabIndex="-1"
             >
 
                 <div className="modal-dialog modal-dialog-centered">
 
                     <div
-                        className="modal-content"
+                        className="modal-content border-0"
                         style={{
                             background: "#131D31",
-                            border: "1px solid rgba(255,255,255,.08)",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
                         }}
                     >
 
-                        {/* Header */}
+                        {/* ======================================
+                            Header
+                        ====================================== */}
 
-                        <div
-                            className="modal-header"
-                            style={{
-                                borderBottom:
-                                    "1px solid rgba(255,255,255,.08)",
-                            }}
-                        >
+                        <div className="modal-header border-secondary">
 
-                            <h5 className="text-white mb-0">
+                            <h5 className="modal-title text-danger fw-bold">
 
                                 Delete Previous Year Paper
 
                             </h5>
 
                             <button
-
                                 type="button"
-
                                 className="btn-close btn-close-white"
-
                                 onClick={onClose}
-
                             />
 
                         </div>
 
-                        {/* Body */}
+                        {/* ======================================
+                            Body
+                        ====================================== */}
 
                         <div className="modal-body">
 
-                            <p className="text-light">
+                            <div className="text-center">
 
-                                Are you sure you want to permanently delete this paper?
+                                <div
+                                    className="mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center"
+                                    style={{
+                                        width: 72,
+                                        height: 72,
+                                        background:
+                                            "rgba(239,68,68,.15)",
+                                    }}
+                                >
 
-                            </p>
+                                    <span
+                                        style={{
+                                            fontSize: 34,
+                                        }}
+                                    >
 
-                            <div
-                                className="rounded-4 p-4"
-                                style={{
-                                    background: "#0F172A",
-                                    border:
-                                        "1px solid rgba(255,255,255,.08)",
-                                }}
-                            >
+                                        ⚠️
 
-                                <h5 className="text-white">
+                                    </span>
 
-                                    {paper.title}
+                                </div>
 
-                                </h5>
+                                <h4 className="text-white fw-bold mb-3">
 
-                                <div className="text-secondary mt-3">
+                                    Delete Previous Year Paper?
 
-                                    <p className="mb-2">
+                                </h4>
+
+                                <p className="text-secondary mb-2">
+
+                                    You are about to permanently delete the following paper:
+
+                                </p>
+
+                                <div
+                                    className="rounded-4 p-3 mt-3"
+                                    style={{
+                                        background: "#0F172A",
+                                        border:
+                                            "1px solid rgba(255,255,255,.08)",
+                                    }}
+                                >
+
+                                    <h5 className="text-primary mb-2">
+
+                                        {paper.title}
+
+                                    </h5>
+
+                                    <p className="text-secondary mb-1">
 
                                         <strong>Exam:</strong>{" "}
 
@@ -101,7 +134,7 @@ function DeletePaperModal({
 
                                     </p>
 
-                                    <p className="mb-2">
+                                    <p className="text-secondary mb-1">
 
                                         <strong>Subject:</strong>{" "}
 
@@ -109,7 +142,7 @@ function DeletePaperModal({
 
                                     </p>
 
-                                    <p className="mb-2">
+                                    <p className="text-secondary mb-1">
 
                                         <strong>Year:</strong>{" "}
 
@@ -117,7 +150,7 @@ function DeletePaperModal({
 
                                     </p>
 
-                                    <p className="mb-0">
+                                    <p className="text-secondary mb-0">
 
                                         <strong>Language:</strong>{" "}
 
@@ -127,32 +160,39 @@ function DeletePaperModal({
 
                                 </div>
 
-                            </div>
+                                <div
+                                    className="rounded-4 p-3 mt-4"
+                                    style={{
+                                        background:
+                                            "rgba(245,158,11,.12)",
+                                        border:
+                                            "1px solid rgba(245,158,11,.25)",
+                                    }}
+                                >
 
-                            <div className="alert alert-warning mt-4 mb-0">
+                                    <p className="text-warning mb-0">
 
-                                This action cannot be undone.
+                                        <strong>Warning:</strong>{" "}
+
+                                        This action cannot be undone.
+
+                                    </p>
+
+                                </div>
 
                             </div>
 
                         </div>
 
-                        {/* Footer */}
+                        {/* ======================================
+                            Footer
+                        ====================================== */}
 
-                        <div
-                            className="modal-footer"
-                            style={{
-                                borderTop:
-                                    "1px solid rgba(255,255,255,.08)",
-                            }}
-                        >
+                        <div className="modal-footer border-secondary">
 
                             <button
-
-                                className="btn btn-outline-light"
-
+                                className="btn btn-outline-light px-4"
                                 onClick={onClose}
-
                             >
 
                                 Cancel
@@ -160,15 +200,10 @@ function DeletePaperModal({
                             </button>
 
                             <button
-
-                                className="btn btn-danger"
-
+                                className="btn btn-danger px-4"
                                 onClick={() =>
-
                                     onConfirm(paper._id)
-
                                 }
-
                             >
 
                                 Delete Paper
@@ -182,8 +217,6 @@ function DeletePaperModal({
                 </div>
 
             </div>
-
-            <div className="modal-backdrop fade show" />
 
         </>
 

@@ -1,78 +1,62 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 import {
-
     getAllExams,
-
-} from "../services/examService";
+} from "../../services/examService";
 
 import {
-
     getSubjectsByExam,
+} from "../../services/subjectService";
 
-} from "../services/subjectService";
+/*
+=====================================
+Create Default Form
+=====================================
+*/
 
 const createFormData = (paper) => ({
 
     title:
-
         paper?.title || "",
 
     description:
-
         paper?.description || "",
 
     exam:
-
         paper?.exam?._id ||
-
         paper?.exam ||
-
         "",
 
     subject:
-
         paper?.subject?._id ||
-
         paper?.subject ||
-
         "",
 
     year:
-
         paper?.year || "",
 
     shift:
-
         paper?.shift || "",
 
     language:
-
         paper?.language ||
-
         "English",
 
     totalQuestions:
-
         paper?.totalQuestions || "",
 
     duration:
-
         paper?.duration || "",
 
     pdfUrl:
-
         paper?.pdfUrl || "",
 
     answerKeyUrl:
-
         paper?.answerKeyUrl || "",
 
     isPremium:
-
-        paper?.isPremium ||
-
-        false,
+        paper?.isPremium || false,
 
 });
 
@@ -86,37 +70,25 @@ function PaperForm({
 
 }) {
 
-    const [
+    /*
+    =====================================
+    States
+    =====================================
+    */
 
-        exams,
-
-        setExams,
-
-    ] = useState([]);
-
-    const [
-
-        subjects,
-
-        setSubjects,
-
-    ] = useState([]);
-
-    const [
-
-        formData,
-
-        setFormData,
-
-    ] = useState(
-
-        createFormData(
-
-            editingPaper
-
-        )
-
+    const [formData, setFormData] = useState(
+        createFormData(editingPaper)
     );
+
+    const [exams, setExams] = useState([]);
+
+    const [subjects, setSubjects] = useState([]);
+
+    const [loadingExams, setLoadingExams] =
+        useState(true);
+
+    const [loadingSubjects, setLoadingSubjects] =
+        useState(false);
 
     /*
     =====================================
@@ -138,32 +110,43 @@ function PaperForm({
 
     useEffect(() => {
 
-        if (
+        if (formData.exam) {
 
-            formData.exam
-
-        ) {
-
-            loadSubjects(
-
-                formData.exam
-
-            );
+            loadSubjects(formData.exam);
 
         }
 
-    }, [
+    }, [formData.exam]);
 
-        formData.exam,
+    /*
+    =====================================
+    Reset Form
+    =====================================
+    */
 
-    ]);
+    useEffect(() => {
 
-    const loadExams = async () => {
+        setFormData(
+
+            createFormData(editingPaper)
+
+        );
+
+    }, [editingPaper]);
+
+    /*
+    =====================================
+    Load Exams
+    =====================================
+    */
+
+    async function loadExams() {
 
         try {
 
-            const response =
+            setLoadingExams(true);
 
+            const response =
                 await getAllExams();
 
             setExams(
@@ -182,24 +165,37 @@ function PaperForm({
 
             console.error(error);
 
+            toast.error(
+
+                "Unable to load exams."
+
+            );
+
         }
 
-    };
+        finally {
 
-    const loadSubjects = async (
+            setLoadingExams(false);
 
-        examId
+        }
 
-    ) => {
+    }
+
+    /*
+    =====================================
+    Load Subjects
+    =====================================
+    */
+
+    async function loadSubjects(examId) {
 
         try {
 
+            setLoadingSubjects(true);
+
             const response =
-
                 await getSubjectsByExam(
-
                     examId
-
                 );
 
             setSubjects(
@@ -218,561 +214,887 @@ function PaperForm({
 
             console.error(error);
 
+            toast.error(
+
+                "Unable to load subjects."
+
+            );
+
         }
 
-    };
+        finally {
+
+            setLoadingSubjects(false);
+
+        }
+
+    }
 
     /*
-    =====================================
-    Handle Change
-    =====================================
-    */
+=====================================
+Handle Change
+=====================================
+*/
 
-    const handleChange = (
+const handleChange = async (event) => {
 
-        event
+    const {
 
-    ) => {
+        name,
 
-        const {
+        value,
 
-            name,
+        type,
 
-            value,
+        checked,
 
-            type,
-
-            checked,
-
-        } = event.target;
-
-        setFormData({
-
-            ...formData,
-
-            [
-
-                name
-
-            ]:
-
-                type ===
-
-                "checkbox"
-
-                    ? checked
-
-                    : value,
-
-        });
-
-    };
+    } = event.target;
 
     /*
-    =====================================
-    Submit
-    =====================================
+    ==============================
+    Exam Changed
+    ==============================
     */
 
-    const handleSubmit = (
+    if (name === "exam") {
 
-        event
+        setFormData((previous) => ({
 
-    ) => {
+            ...previous,
 
-        event.preventDefault();
+            exam: value,
 
-        onSubmit(
+            subject: "",
 
-            formData
+        }));
+
+        if (value) {
+
+            await loadSubjects(value);
+
+        }
+
+        else {
+
+            setSubjects([]);
+
+        }
+
+        return;
+
+    }
+
+    /*
+    ==============================
+    Other Fields
+    ==============================
+    */
+
+    setFormData((previous) => ({
+
+        ...previous,
+
+        [name]:
+
+            type === "checkbox"
+
+                ? checked
+
+                : value,
+
+    }));
+
+};
+
+/*
+=====================================
+Submit
+=====================================
+*/
+
+const handleSubmit = async (event) => {
+
+    event.preventDefault();
+
+    /*
+    ==============================
+    Validation
+    ==============================
+    */
+
+    if (!formData.title.trim()) {
+
+        return toast.error(
+
+            "Paper title is required."
 
         );
 
-    };
+    }
+
+    if (!formData.exam) {
+
+        return toast.error(
+
+            "Please select an exam."
+
+        );
+
+    }
+
+    if (!formData.subject) {
+
+        return toast.error(
+
+            "Please select a subject."
+
+        );
+
+    }
+
+    if (!formData.year) {
+
+        return toast.error(
+
+            "Please enter the paper year."
+
+        );
+
+    }
+
+    if (!formData.totalQuestions) {
+
+        return toast.error(
+
+            "Total questions are required."
+
+        );
+
+    }
+
+    if (!formData.duration) {
+
+        return toast.error(
+
+            "Duration is required."
+
+        );
+
+    }
+
+    if (!formData.pdfUrl.trim()) {
+
+        return toast.error(
+
+            "PDF URL is required."
+
+        );
+
+    }
+
+    /*
+    ==============================
+    Submit
+    ==============================
+    */
+
+    await onSubmit({
+
+        ...formData,
+
+        year: Number(formData.year),
+
+        totalQuestions: Number(
+
+            formData.totalQuestions
+
+        ),
+
+        duration: Number(
+
+            formData.duration
+
+        ),
+
+    });
+
+    /*
+    ==============================
+    Reset Create Form
+    ==============================
+    */
+
+    if (!editingPaper) {
+
+        setFormData(
+
+            createFormData()
+
+        );
+
+        setSubjects([]);
+
+    }
+
+};
+
+/*
+=====================================
+Loading
+=====================================
+*/
+
+if (loadingExams) {
 
     return (
 
-        <div>
+        <div className="text-center py-5">
+
+            <div
+                className="spinner-border text-primary mb-3"
+                role="status"
+            />
+
+            <p className="text-secondary mb-0">
+
+                Loading exams...
+
+            </p>
+
+        </div>
+
+    );
+
+}return (
+
+    <div
+        className="rounded-4"
+        style={{
+            background: "#131D31",
+            border:
+                "1px solid rgba(255,255,255,.08)",
+        }}
+    >
+
+        {/* =====================================
+            Header
+        ===================================== */}
+
+        <div className="p-4 border-bottom border-secondary">
+
+            <h5 className="text-white fw-bold mb-1">
+
+                {
+
+                    editingPaper
+
+                        ? "Edit Previous Year Paper"
+
+                        : "Create Previous Year Paper"
+
+                }
+
+            </h5>
+
+            <p className="text-secondary mb-0">
+
+                Fill in the details below to create or update a previous year paper.
+
+            </p>
+
+        </div>
+
+        {/* =====================================
+            Form
+        ===================================== */}
+
+        <div className="p-4">
 
             <form onSubmit={handleSubmit}>
 
+                {/* =====================================
+                    Title
+                ===================================== */}
+
+                <div className="mb-4">
+
+                    <label className="form-label text-light">
+
+                        Paper Title
+
+                    </label>
+
+                    <input
+
+                        type="text"
+
+                        className="form-control"
+
+                        name="title"
+
+                        value={formData.title}
+
+                        onChange={handleChange}
+
+                        placeholder="Enter paper title"
+
+                        style={{
+                            background: "#0F172A",
+                            color: "#fff",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+                        }}
+
+                    />
+
+                </div>
+
+                {/* =====================================
+                    Description
+                ===================================== */}
+
+                <div className="mb-4">
+
+                    <label className="form-label text-light">
+
+                        Description
+
+                    </label>
+
+                    <textarea
+
+                        rows="4"
+
+                        className="form-control"
+
+                        name="description"
+
+                        value={formData.description}
+
+                        onChange={handleChange}
+
+                        placeholder="Write a short description..."
+
+                        style={{
+                            background: "#0F172A",
+                            color: "#fff",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+                        }}
+
+                    />
+
+                </div>
+
+                {/* =====================================
+                    Exam & Subject
+                ===================================== */}
+
                 <div className="row">
 
-    {/* =====================================
-        Title
-    ===================================== */}
+                    <div className="col-md-6 mb-4">
 
-    <div className="col-md-12 mb-3">
+                        <label className="form-label text-light">
 
-        <label className="form-label">
+                            Exam
 
-            Paper Title
+                        </label>
 
-        </label>
+                        <select
 
-        <input
+                            className="form-select"
 
-            type="text"
+                            name="exam"
 
-            className="form-control"
+                            value={formData.exam}
 
-            name="title"
+                            onChange={handleChange}
 
-            value={formData.title}
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
 
-            onChange={handleChange}
+                        >
 
-            required
+                            <option value="">
 
-        />
+                                Select Exam
 
-    </div>
+                            </option>
 
-    {/* =====================================
-        Description
-    ===================================== */}
+                            {
 
-    <div className="col-md-12 mb-3">
+                                exams.map((exam) => (
 
-        <label className="form-label">
+                                    <option
 
-            Description
+                                        key={exam._id}
 
-        </label>
+                                        value={exam._id}
 
-        <textarea
+                                    >
 
-            rows="3"
+                                        {exam.name}
 
-            className="form-control"
+                                    </option>
 
-            name="description"
+                                ))
 
-            value={formData.description}
+                            }
 
-            onChange={handleChange}
+                        </select>
 
-        />
+                    </div>
 
-    </div>
+                    <div className="col-md-6 mb-4">
 
-    {/* =====================================
-        Exam
-    ===================================== */}
+                        <label className="form-label text-light">
 
-    <div className="col-md-6 mb-3">
+                            Subject
 
-        <label className="form-label">
+                        </label>
 
-            Exam
+                        <select
 
-        </label>
+                            className="form-select"
 
-        <select
+                            name="subject"
 
-            className="form-select"
+                            value={formData.subject}
 
-            name="exam"
+                            onChange={handleChange}
 
-            value={formData.exam}
+                            disabled={
+                                loadingSubjects ||
+                                !formData.exam
+                            }
 
-            onChange={handleChange}
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
 
-            required
+                        >
 
-        >
+                            <option value="">
 
-            <option value="">
+                                {
 
-                Select Exam
+                                    loadingSubjects
 
-            </option>
+                                        ? "Loading..."
 
-            {
+                                        : "Select Subject"
 
-                exams.map((exam) => (
+                                }
 
-                    <option
+                            </option>
 
-                        key={exam._id}
+                            {
 
-                        value={exam._id}
+                                subjects.map((subject) => (
+
+                                    <option
+
+                                        key={subject._id}
+
+                                        value={subject._id}
+
+                                    >
+
+                                        {subject.name}
+
+                                    </option>
+
+                                ))
+
+                            }
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                {/* =====================================
+                    Paper Details
+                ===================================== */}
+
+                <div className="row">
+
+                    <div className="col-lg-4 col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            Year
+
+                        </label>
+
+                        <input
+
+                            type="number"
+
+                            className="form-control"
+
+                            name="year"
+
+                            value={formData.year}
+
+                            onChange={handleChange}
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        />
+
+                    </div>
+
+                    <div className="col-lg-4 col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            Shift
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            className="form-control"
+
+                            name="shift"
+
+                            value={formData.shift}
+
+                            onChange={handleChange}
+
+                            placeholder="Morning / Evening"
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        />
+
+                    </div>
+
+                    <div className="col-lg-4 col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            Language
+
+                        </label>
+
+                        <select
+
+                            className="form-select"
+
+                            name="language"
+
+                            value={formData.language}
+
+                            onChange={handleChange}
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        >
+
+                            <option value="English">
+
+                                English
+
+                            </option>
+
+                            <option value="Hindi">
+
+                                Hindi
+
+                            </option>
+
+                            <option value="Bilingual">
+
+                                Bilingual
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                {/* =====================================
+                    Questions & Duration
+                ===================================== */}
+
+                <div className="row">
+
+                    <div className="col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            Total Questions
+
+                        </label>
+
+                        <input
+
+                            type="number"
+
+                            className="form-control"
+
+                            name="totalQuestions"
+
+                            value={formData.totalQuestions}
+
+                            onChange={handleChange}
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        />
+
+                    </div>
+
+                    <div className="col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            Duration (Minutes)
+
+                        </label>
+
+                        <input
+
+                            type="number"
+
+                            className="form-control"
+
+                            name="duration"
+
+                            value={formData.duration}
+
+                            onChange={handleChange}
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        />
+
+                    </div>
+
+                </div>
+
+                                {/* =====================================
+                    PDF URL
+                ===================================== */}
+
+                <div className="row">
+
+                    <div className="col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            PDF URL
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            className="form-control"
+
+                            name="pdfUrl"
+
+                            value={formData.pdfUrl}
+
+                            onChange={handleChange}
+
+                            placeholder="https://example.com/paper.pdf"
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        />
+
+                    </div>
+
+                    {/* =====================================
+                        Answer Key
+                    ===================================== */}
+
+                    <div className="col-md-6 mb-4">
+
+                        <label className="form-label text-light">
+
+                            Answer Key URL
+
+                        </label>
+
+                        <input
+
+                            type="text"
+
+                            className="form-control"
+
+                            name="answerKeyUrl"
+
+                            value={formData.answerKeyUrl}
+
+                            onChange={handleChange}
+
+                            placeholder="https://example.com/answer-key.pdf"
+
+                            style={{
+                                background: "#0F172A",
+                                color: "#fff",
+                                border:
+                                    "1px solid rgba(255,255,255,.08)",
+                            }}
+
+                        />
+
+                    </div>
+
+                </div>
+
+                {/* =====================================
+                    Premium
+                ===================================== */}
+
+                <div className="mb-4">
+
+                    <div
+                        className="rounded-4 p-4"
+                        style={{
+                            background: "#0F172A",
+                            border:
+                                "1px solid rgba(255,255,255,.08)",
+                        }}
+                    >
+
+                        <div className="form-check form-switch m-0">
+
+                            <input
+
+                                className="form-check-input"
+
+                                type="checkbox"
+
+                                id="isPremium"
+
+                                name="isPremium"
+
+                                checked={formData.isPremium}
+
+                                onChange={handleChange}
+
+                            />
+
+                            <label
+
+                                className="form-check-label text-light fw-semibold"
+
+                                htmlFor="isPremium"
+
+                            >
+
+                                Premium Paper
+
+                            </label>
+
+                        </div>
+
+                        <small className="text-secondary">
+
+                            Enable this option if this paper should only be
+                            available for premium users.
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+                {/* =====================================
+                    Buttons
+                ===================================== */}
+
+                <div className="d-flex gap-2">
+
+                    <button
+
+                        type="submit"
+
+                        className="btn btn-primary px-4"
 
                     >
 
-                        {exam.name}
+                        {
 
-                    </option>
+                            editingPaper
 
-                ))
+                                ? "Update Previous Year Paper"
 
-            }
+                                : "Create Previous Year Paper"
 
-        </select>
+                        }
 
-    </div>
+                    </button>
 
-    {/* =====================================
-        Subject
-    ===================================== */}
+                    <button
 
-    <div className="col-md-6 mb-3">
+                        type="button"
 
-        <label className="form-label">
+                        className="btn btn-outline-light px-4"
 
-            Subject
-
-        </label>
-
-        <select
-
-            className="form-select"
-
-            name="subject"
-
-            value={formData.subject}
-
-            onChange={handleChange}
-
-            required
-
-        >
-
-            <option value="">
-
-                Select Subject
-
-            </option>
-
-            {
-
-                subjects.map((subject) => (
-
-                    <option
-
-                        key={subject._id}
-
-                        value={subject._id}
+                        onClick={onCancel}
 
                     >
 
-                        {subject.name}
+                        Cancel
 
-                    </option>
+                    </button>
 
-                ))
+                </div>
 
-            }
-
-        </select>
-
-    </div>
-
-    {/* =====================================
-        Year
-    ===================================== */}
-
-    <div className="col-md-4 mb-3">
-
-        <label className="form-label">
-
-            Year
-
-        </label>
-
-        <input
-
-            type="number"
-
-            className="form-control"
-
-            name="year"
-
-            value={formData.year}
-
-            onChange={handleChange}
-
-            required
-
-        />
-
-    </div>
-
-    {/* =====================================
-        Shift
-    ===================================== */}
-
-    <div className="col-md-4 mb-3">
-
-        <label className="form-label">
-
-            Shift
-
-        </label>
-
-        <input
-
-            type="text"
-
-            className="form-control"
-
-            name="shift"
-
-            value={formData.shift}
-
-            onChange={handleChange}
-
-        />
-
-    </div>
-
-    {/* =====================================
-        Language
-    ===================================== */}
-
-    <div className="col-md-4 mb-3">
-
-        <label className="form-label">
-
-            Language
-
-        </label>
-
-        <select
-
-            className="form-select"
-
-            name="language"
-
-            value={formData.language}
-
-            onChange={handleChange}
-
-        >
-
-            <option value="English">
-
-                English
-
-            </option>
-
-            <option value="Hindi">
-
-                Hindi
-
-            </option>
-
-            <option value="Bilingual">
-
-                Bilingual
-
-            </option>
-
-        </select>
-
-    </div>
-
-    {/* =====================================
-        Total Questions
-    ===================================== */}
-
-    <div className="col-md-6 mb-3">
-
-        <label className="form-label">
-
-            Total Questions
-
-        </label>
-
-        <input
-
-            type="number"
-
-            className="form-control"
-
-            name="totalQuestions"
-
-            value={formData.totalQuestions}
-
-            onChange={handleChange}
-
-        />
-
-    </div>
-
-    {/* =====================================
-        Duration
-    ===================================== */}
-
-    <div className="col-md-6 mb-3">
-
-        <label className="form-label">
-
-            Duration (Minutes)
-
-        </label>
-
-        <input
-
-            type="number"
-
-            className="form-control"
-
-            name="duration"
-
-            value={formData.duration}
-
-            onChange={handleChange}
-
-        />
-
-    </div>    {/* =====================================
-        PDF URL
-    ===================================== */}
-
-    <div className="col-md-6 mb-3">
-
-        <label className="form-label">
-
-            PDF URL
-
-        </label>
-
-        <input
-
-            type="text"
-
-            className="form-control"
-
-            name="pdfUrl"
-
-            value={formData.pdfUrl}
-
-            onChange={handleChange}
-
-            placeholder="https://..."
-
-            required
-
-        />
-
-    </div>
-
-    {/* =====================================
-        Answer Key URL
-    ===================================== */}
-
-    <div className="col-md-6 mb-3">
-
-        <label className="form-label">
-
-            Answer Key URL
-
-        </label>
-
-        <input
-
-            type="text"
-
-            className="form-control"
-
-            name="answerKeyUrl"
-
-            value={formData.answerKeyUrl}
-
-            onChange={handleChange}
-
-            placeholder="https://..."
-
-        />
-
-    </div>
-
-    {/* =====================================
-        Premium
-    ===================================== */}
-
-    <div className="col-md-12 mb-4">
-
-        <div className="form-check form-switch">
-
-            <input
-
-                className="form-check-input"
-
-                type="checkbox"
-
-                id="isPremium"
-
-                name="isPremium"
-
-                checked={formData.isPremium}
-
-                onChange={handleChange}
-
-            />
-
-            <label
-
-                className="form-check-label"
-
-                htmlFor="isPremium"
-
-            >
-
-                Premium Paper
-
-            </label>
+            </form>
 
         </div>
 
     </div>
-
-</div>
-
-<hr />
-
-<div className="d-flex justify-content-end gap-3">
-
-    <button
-
-        type="button"
-
-        className="btn btn-outline-secondary"
-
-        onClick={onCancel}
-
-    >
-
-        Cancel
-
-    </button>
-
-    <button
-
-        type="submit"
-
-        className="btn btn-primary"
-
-    >
-
-        {
-
-            editingPaper
-
-                ? "Update Paper"
-
-                : "Create Paper"
-
-        }
-
-    </button>
-
-</div>
-
-</form>
-
-</div>
 
 );
 

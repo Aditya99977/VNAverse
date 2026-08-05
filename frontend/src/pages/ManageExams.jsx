@@ -30,8 +30,26 @@ const ManageExams = () => {
 
             const response = await getAllExams();
 
-            setExams(response.exams || []);
+            console.log("Exam API Response:", response);
+
+            let examsData = [];
+
+            if (Array.isArray(response)) {
+                examsData = response;
+            } else if (Array.isArray(response?.exams)) {
+                examsData = response.exams;
+            } else if (Array.isArray(response?.data)) {
+                examsData = response.data;
+            } else if (Array.isArray(response?.data?.exams)) {
+                examsData = response.data.exams;
+            } else if (Array.isArray(response?.result)) {
+                examsData = response.result;
+            }
+
+            setExams(examsData);
         } catch (error) {
+            console.error(error);
+
             toast.error(
                 error?.response?.data?.message ||
                     "Failed to load exams."
@@ -74,18 +92,17 @@ const ManageExams = () => {
         try {
             if (selectedExam) {
                 await updateExam(selectedExam._id, formData);
-
                 toast.success("Exam updated successfully.");
             } else {
                 await createExam(formData);
-
                 toast.success("Exam created successfully.");
             }
 
             closeExamModal();
-
             await loadExams();
         } catch (error) {
+            console.error(error);
+
             toast.error(
                 error?.response?.data?.message ||
                     "Something went wrong."
@@ -107,6 +124,8 @@ const ManageExams = () => {
 
             await loadExams();
         } catch (error) {
+            console.error(error);
+
             toast.error(
                 error?.response?.data?.message ||
                     "Failed to delete exam."
@@ -118,7 +137,6 @@ const ManageExams = () => {
 
     return (
         <div className="container-fluid py-4">
-
             <ExamStats exams={exams} />
 
             <ExamTable
@@ -143,7 +161,6 @@ const ManageExams = () => {
                 onClose={closeDeleteModal}
                 onConfirm={confirmDelete}
             />
-
         </div>
     );
 };

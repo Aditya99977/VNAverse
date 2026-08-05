@@ -2,16 +2,36 @@ import api from "./api";
 
 /*
 ==================================================
+Helper
+==================================================
+*/
+
+const unwrapResponse = (response) => {
+
+    if (response?.data !== undefined) {
+
+        return response.data;
+
+    }
+
+    return response;
+
+};
+
+/*
+==================================================
 Dashboard
 ==================================================
 */
 
 export const getAdminDashboard = async () => {
+
     const { data } = await api.get(
         "/admin/dashboard"
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /*
@@ -21,31 +41,37 @@ Users
 */
 
 export const getAllUsers = async () => {
+
     const { data } = await api.get(
         "/admin/users"
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 export const getUserDetails = async (
     userId
 ) => {
+
     const { data } = await api.get(
         `/admin/users/${userId}`
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 export const deleteUser = async (
     userId
 ) => {
+
     const { data } = await api.delete(
         `/admin/users/${userId}`
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /*
@@ -55,44 +81,52 @@ Questions
 */
 
 export const getAllQuestions = async () => {
+
     const { data } = await api.get(
         "/admin/questions"
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 export const addQuestion = async (
     questionData
 ) => {
+
     const { data } = await api.post(
         "/questions",
         questionData
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 export const updateQuestion = async (
     questionId,
     questionData
 ) => {
+
     const { data } = await api.put(
         `/questions/${questionId}`,
         questionData
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 export const deleteQuestion = async (
     questionId
 ) => {
+
     const { data } = await api.delete(
         `/questions/${questionId}`
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /*
@@ -105,10 +139,16 @@ export const uploadCSV = async (
     file,
     examId
 ) => {
+
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append("examId", examId);
+
+    if (examId) {
+
+        formData.append("examId", examId);
+
+    }
 
     const { data } = await api.post(
         "/admin/upload/csv",
@@ -121,5 +161,6 @@ export const uploadCSV = async (
         }
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };

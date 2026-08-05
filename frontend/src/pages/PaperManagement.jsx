@@ -1,4 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
+import {
+    FileText,
+    Plus,
+} from "lucide-react";
 
 import MainLayout from "../layouts/MainLayout";
 
@@ -8,27 +13,16 @@ import DeletePaperModal from "../components/papers/DeletePaperModal";
 import PaperFilters from "../components/papers/PaperFilters";
 
 import {
-
     createPaper,
-
     getAllPapersAdmin,
-
-    getPaperDetails,
-
+    getPaperByIdAdmin,
     updatePaper,
-
     deletePaper,
-
     publishPaper,
-
     unpublishPaper,
-
     activatePaper,
-
     deactivatePaper,
-
     getPaperStatistics,
-
 } from "../services/paperService";
 
 function PaperManagement() {
@@ -39,21 +33,25 @@ function PaperManagement() {
     =====================================
     */
 
+    const [loading, setLoading] = useState(true);
+
     const [papers, setPapers] = useState([]);
 
     const [statistics, setStatistics] = useState(null);
 
-    const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState("");
 
-    const [selectedPaper, setSelectedPaper] = useState(null);
+    const [selectedPaper, setSelectedPaper] =
+        useState(null);
 
-    const [editingPaper, setEditingPaper] = useState(null);
+    const [editingPaper, setEditingPaper] =
+        useState(null);
 
-    const [showForm, setShowForm] = useState(false);
+    const [showForm, setShowForm] =
+        useState(false);
 
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] =
+        useState(false);
 
     const [filters, setFilters] = useState({
 
@@ -85,7 +83,7 @@ function PaperManagement() {
     =====================================
     */
 
-    const loadPapers = async () => {
+    async function loadPapers() {
 
         try {
 
@@ -133,13 +131,15 @@ function PaperManagement() {
 
             console.error(error);
 
-            setError(
+            const message =
 
-                error.response?.data?.message ||
+                error?.response?.data?.message ||
 
-                "Unable to load previous year papers."
+                "Unable to load previous year papers.";
 
-            );
+            setError(message);
+
+            toast.error(message);
 
         }
 
@@ -149,7 +149,9 @@ function PaperManagement() {
 
         }
 
-    };/*
+    }
+
+    /*
 =====================================
 Create / Update Paper
 =====================================
@@ -162,22 +164,21 @@ const handleSavePaper = async (formData) => {
         if (editingPaper) {
 
             await updatePaper(
-
                 editingPaper._id,
-
                 formData
-
             );
 
-            alert("Paper updated successfully.");
+            toast.success(
+                "Previous year paper updated successfully."
+            );
 
-        }
-
-        else {
+        } else {
 
             await createPaper(formData);
 
-            alert("Paper created successfully.");
+            toast.success(
+                "Previous year paper created successfully."
+            );
 
         }
 
@@ -187,17 +188,15 @@ const handleSavePaper = async (formData) => {
 
         await loadPapers();
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
-        alert(
+        toast.error(
 
-            error.response?.data?.message ||
+            error?.response?.data?.message ||
 
-            "Unable to save paper."
+            "Unable to save previous year paper."
 
         );
 
@@ -215,29 +214,33 @@ const handleEdit = async (paper) => {
 
     try {
 
-        const response = await getPaperDetails(
-
+        const response = await getPaperByIdAdmin(
             paper._id
-
         );
 
         setEditingPaper(
 
+            response.paper ||
+
             response.data ||
 
-            response.paper
+            null
 
         );
 
         setShowForm(true);
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
-        alert("Unable to load paper.");
+        toast.error(
+
+            error?.response?.data?.message ||
+
+            "Unable to load paper details."
+
+        );
 
     }
 
@@ -245,7 +248,7 @@ const handleEdit = async (paper) => {
 
 /*
 =====================================
-Delete
+Delete Paper
 =====================================
 */
 
@@ -263,7 +266,9 @@ const confirmDelete = async (id) => {
 
         await deletePaper(id);
 
-        alert("Paper deleted successfully.");
+        toast.success(
+            "Previous year paper deleted successfully."
+        );
 
         setShowDeleteModal(false);
 
@@ -271,13 +276,17 @@ const confirmDelete = async (id) => {
 
         await loadPapers();
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
-        alert("Unable to delete paper.");
+        toast.error(
+
+            error?.response?.data?.message ||
+
+            "Unable to delete paper."
+
+        );
 
     }
 
@@ -296,32 +305,38 @@ const handlePublishToggle = async (paper) => {
         if (paper.isPublished) {
 
             await unpublishPaper(
-
                 paper._id
-
             );
 
-        }
+            toast.success(
+                "Paper unpublished successfully."
+            );
 
-        else {
+        } else {
 
             await publishPaper(
-
                 paper._id
+            );
 
+            toast.success(
+                "Paper published successfully."
             );
 
         }
 
         await loadPapers();
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
-        alert("Unable to update paper.");
+        toast.error(
+
+            error?.response?.data?.message ||
+
+            "Unable to update publish status."
+
+        );
 
     }
 
@@ -340,38 +355,42 @@ const handleStatusToggle = async (paper) => {
         if (paper.isActive) {
 
             await deactivatePaper(
-
                 paper._id
-
             );
 
-        }
+            toast.success(
+                "Paper deactivated successfully."
+            );
 
-        else {
+        } else {
 
             await activatePaper(
-
                 paper._id
+            );
 
+            toast.success(
+                "Paper activated successfully."
             );
 
         }
 
         await loadPapers();
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
-        alert("Unable to update status.");
+        toast.error(
+
+            error?.response?.data?.message ||
+
+            "Unable to update paper status."
+
+        );
 
     }
 
-};
-
-/*
+};/*
 =====================================
 Filters
 =====================================
@@ -386,13 +405,9 @@ const filteredPapers = useMemo(() => {
             !filters.search ||
 
             paper.title
-
                 ?.toLowerCase()
-
                 .includes(
-
                     filters.search.toLowerCase()
-
                 );
 
         const matchesSubject =
@@ -400,7 +415,6 @@ const filteredPapers = useMemo(() => {
             !filters.subject ||
 
             paper.subject?.name ===
-
                 filters.subject;
 
         const matchesYear =
@@ -408,7 +422,6 @@ const filteredPapers = useMemo(() => {
             !filters.year ||
 
             String(paper.year) ===
-
                 String(filters.year);
 
         const matchesLanguage =
@@ -416,7 +429,6 @@ const filteredPapers = useMemo(() => {
             !filters.language ||
 
             paper.language ===
-
                 filters.language;
 
         return (
@@ -439,9 +451,11 @@ const filteredPapers = useMemo(() => {
 
     filters,
 
-]);/*
+]);
+
+/*
 =====================================
-Loading
+Loading Screen
 =====================================
 */
 
@@ -451,7 +465,7 @@ if (loading) {
 
         <MainLayout>
 
-            <div className="container py-5">
+            <div className="container-fluid py-4">
 
                 <div
                     className="rounded-4 p-5 text-center"
@@ -462,9 +476,12 @@ if (loading) {
                     }}
                 >
 
-                    <div className="spinner-border text-primary mb-4" />
+                    <div
+                        className="spinner-border text-primary mb-4"
+                        role="status"
+                    />
 
-                    <h3 className="text-white">
+                    <h3 className="text-white fw-bold">
 
                         Loading Previous Year Papers...
 
@@ -472,7 +489,7 @@ if (loading) {
 
                     <p className="text-secondary mb-0">
 
-                        Please wait while we load the papers.
+                        Please wait while we fetch all previous year papers.
 
                     </p>
 
@@ -488,7 +505,7 @@ if (loading) {
 
 /*
 =====================================
-Error
+Error Screen
 =====================================
 */
 
@@ -498,11 +515,48 @@ if (error) {
 
         <MainLayout>
 
-            <div className="container py-5">
+            <div className="container-fluid py-4">
 
-                <div className="alert alert-danger">
+                <div
+                    className="rounded-4 p-5 text-center"
+                    style={{
+                        background: "#131D31",
+                        border:
+                            "1px solid rgba(239,68,68,.25)",
+                    }}
+                >
 
-                    {error}
+                    <div
+                        className="mb-4"
+                        style={{
+                            fontSize: 54,
+                        }}
+                    >
+
+                        📄
+
+                    </div>
+
+                    <h3 className="text-white fw-bold mb-3">
+
+                        Unable to Load Papers
+
+                    </h3>
+
+                    <p className="text-secondary mb-4">
+
+                        {error}
+
+                    </p>
+
+                    <button
+                        className="btn btn-primary px-4"
+                        onClick={loadPapers}
+                    >
+
+                        Try Again
+
+                    </button>
 
                 </div>
 
@@ -512,9 +566,7 @@ if (error) {
 
     );
 
-}
-
-/*
+}/*
 =====================================
 UI
 =====================================
@@ -526,32 +578,54 @@ return (
 
         <div className="container-fluid py-4">
 
-            {/* ===============================
+            {/* ======================================
                 Header
-            =============================== */}
+            ====================================== */}
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
 
                 <div>
 
-                    <h2 className="fw-bold mb-1">
+                    <div className="d-flex align-items-center gap-3 mb-2">
 
-                        Previous Year Papers
+                        <div
+                            className="rounded-circle d-flex align-items-center justify-content-center"
+                            style={{
+                                width: 56,
+                                height: 56,
+                                background: "rgba(37,99,235,.15)",
+                            }}
+                        >
 
-                    </h2>
+                            <FileText
+                                size={28}
+                                color="#2563EB"
+                            />
 
-                    <p className="text-secondary mb-0">
+                        </div>
 
-                        Manage all previous year papers from one place.
+                        <div>
 
-                    </p>
+                            <h2 className="fw-bold text-white mb-1">
+
+                                Previous Year Paper Management
+
+                            </h2>
+
+                            <p className="text-secondary mb-0">
+
+                                Create, organize and publish previous year papers for students.
+
+                            </p>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
                 <button
-
-                    className="btn btn-primary px-4"
-
+                    className="btn btn-primary px-4 d-flex align-items-center gap-2"
                     onClick={() => {
 
                         setEditingPaper(null);
@@ -559,18 +633,19 @@ return (
                         setShowForm(true);
 
                     }}
-
                 >
 
-                    + Add Paper
+                    <Plus size={18} />
+
+                    Add New Paper
 
                 </button>
 
             </div>
 
-            {/* ===============================
+            {/* ======================================
                 Statistics
-            =============================== */}
+            ====================================== */}
 
             {
 
@@ -578,23 +653,23 @@ return (
 
                     <div className="row g-4 mb-4">
 
-                        <div className="col-md-3">
+                        <div className="col-lg-3 col-md-6">
 
                             <div
                                 className="rounded-4 p-4 h-100"
                                 style={{
-                                    background:"#131D31",
-                                    border:"1px solid rgba(255,255,255,.08)",
+                                    background: "#131D31",
+                                    border: "1px solid rgba(255,255,255,.08)",
                                 }}
                             >
 
-                                <h6 className="text-secondary">
+                                <p className="text-secondary mb-2">
 
                                     Total Papers
 
-                                </h6>
+                                </p>
 
-                                <h2 className="text-white">
+                                <h2 className="text-white fw-bold mb-0">
 
                                     {statistics.total ?? 0}
 
@@ -604,23 +679,23 @@ return (
 
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-lg-3 col-md-6">
 
                             <div
                                 className="rounded-4 p-4 h-100"
                                 style={{
-                                    background:"#131D31",
-                                    border:"1px solid rgba(255,255,255,.08)",
+                                    background: "#131D31",
+                                    border: "1px solid rgba(255,255,255,.08)",
                                 }}
                             >
 
-                                <h6 className="text-secondary">
+                                <p className="text-secondary mb-2">
 
                                     Published
 
-                                </h6>
+                                </p>
 
-                                <h2 className="text-success">
+                                <h2 className="text-success fw-bold mb-0">
 
                                     {statistics.published ?? 0}
 
@@ -630,23 +705,23 @@ return (
 
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-lg-3 col-md-6">
 
                             <div
                                 className="rounded-4 p-4 h-100"
                                 style={{
-                                    background:"#131D31",
-                                    border:"1px solid rgba(255,255,255,.08)",
+                                    background: "#131D31",
+                                    border: "1px solid rgba(255,255,255,.08)",
                                 }}
                             >
 
-                                <h6 className="text-secondary">
+                                <p className="text-secondary mb-2">
 
                                     Active
 
-                                </h6>
+                                </p>
 
-                                <h2 className="text-primary">
+                                <h2 className="text-primary fw-bold mb-0">
 
                                     {statistics.active ?? 0}
 
@@ -656,23 +731,23 @@ return (
 
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-lg-3 col-md-6">
 
                             <div
                                 className="rounded-4 p-4 h-100"
                                 style={{
-                                    background:"#131D31",
-                                    border:"1px solid rgba(255,255,255,.08)",
+                                    background: "#131D31",
+                                    border: "1px solid rgba(255,255,255,.08)",
                                 }}
                             >
 
-                                <h6 className="text-secondary">
+                                <p className="text-secondary mb-2">
 
                                     Inactive
 
-                                </h6>
+                                </p>
 
-                                <h2 className="text-danger">
+                                <h2 className="text-danger fw-bold mb-0">
 
                                     {statistics.inactive ?? 0}
 
@@ -688,9 +763,9 @@ return (
 
             }
 
-            {/* ===============================
+            {/* ======================================
                 Filters
-            =============================== */}
+            ====================================== */}
 
             <PaperFilters
 
@@ -702,9 +777,9 @@ return (
 
             />
 
-            {/* ===============================
+            {/* ======================================
                 Paper Table
-            =============================== */}
+            ====================================== */}
 
             <PaperTable
 
@@ -718,9 +793,11 @@ return (
 
                 onStatusToggle={handleStatusToggle}
 
-            />            {/* ===============================
-                Create / Edit Paper
-            =============================== */}
+            />
+
+            {/* ======================================
+                Create / Edit Modal
+            ====================================== */}
 
             {
 
@@ -730,43 +807,37 @@ return (
                         className="modal fade show"
                         style={{
                             display: "block",
-                            background:
-                                "rgba(0,0,0,.55)",
+                            background: "rgba(0,0,0,.60)",
                         }}
                     >
 
-                        <div className="modal-dialog modal-xl">
+                        <div className="modal-dialog modal-xl modal-dialog-centered">
 
                             <div
-                                className="modal-content"
+                                className="modal-content border-0"
                                 style={{
                                     background: "#131D31",
-                                    border:
-                                        "1px solid rgba(255,255,255,.08)",
+                                    border: "1px solid rgba(255,255,255,.08)",
                                 }}
                             >
 
-                                <div
-                                    className="modal-header border-secondary"
-                                >
+                                <div className="modal-header border-secondary">
 
-                                    <h5 className="text-white mb-0">
+                                    <h5 className="text-white fw-bold mb-0">
 
                                         {
 
                                             editingPaper
 
-                                                ? "Edit Previous Year Paper"
+                                                ? "✏️ Edit Previous Year Paper"
 
-                                                : "Create Previous Year Paper"
+                                                : "📄 Create Previous Year Paper"
 
                                         }
 
                                     </h5>
 
                                     <button
-
-                                        type="button"
 
                                         className="btn-close btn-close-white"
 
@@ -794,17 +865,9 @@ return (
 
                                         }
 
-                                        editingPaper={
+                                        editingPaper={editingPaper}
 
-                                            editingPaper
-
-                                        }
-
-                                        onSubmit={
-
-                                            handleSavePaper
-
-                                        }
+                                        onSubmit={handleSavePaper}
 
                                         onCancel={() => {
 
@@ -828,9 +891,9 @@ return (
 
             }
 
-            {/* ===============================
+            {/* ======================================
                 Delete Modal
-            =============================== */}
+            ====================================== */}
 
             <DeletePaperModal
 

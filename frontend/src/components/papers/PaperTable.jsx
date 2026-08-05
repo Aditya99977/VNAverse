@@ -6,11 +6,12 @@ import {
     CheckCircle,
     XCircle,
     Crown,
+    FileText,
 } from "lucide-react";
 
-const PaperTable = ({
+function PaperTable({
 
-    papers,
+    papers = [],
 
     onEdit,
 
@@ -20,15 +21,45 @@ const PaperTable = ({
 
     onStatusToggle,
 
-}) => {
+}) {
 
-    if (!papers || papers.length === 0) {
+    /*
+    =====================================
+    Empty State
+    =====================================
+    */
+
+    if (!papers.length) {
 
         return (
 
-            <div className="alert alert-info">
+            <div
+                className="rounded-4 p-5 text-center"
+                style={{
+                    background: "#131D31",
+                    border:
+                        "1px solid rgba(255,255,255,.08)",
+                }}
+            >
 
-                No previous year papers found.
+                <FileText
+                    size={60}
+                    color="#64748B"
+                    className="mb-3"
+                />
+
+                <h4 className="text-white fw-bold">
+
+                    No Previous Year Papers
+
+                </h4>
+
+                <p className="text-secondary mb-0">
+
+                    Create your first paper to start building
+                    the library.
+
+                </p>
 
             </div>
 
@@ -42,9 +73,48 @@ const PaperTable = ({
             className="rounded-4 overflow-hidden"
             style={{
                 background: "#131D31",
-                border: "1px solid rgba(255,255,255,.08)",
+                border:
+                    "1px solid rgba(255,255,255,.08)",
             }}
         >
+
+            {/* =====================================
+                Header
+            ===================================== */}
+
+            <div className="p-4 border-bottom border-secondary">
+
+                <div className="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <h5 className="text-white fw-bold mb-1">
+
+                            Previous Year Papers
+
+                        </h5>
+
+                        <p className="text-secondary mb-0">
+
+                            Manage all papers from one place.
+
+                        </p>
+
+                    </div>
+
+                    <span className="badge bg-primary px-3 py-2">
+
+                        {papers.length} Papers
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            {/* =====================================
+                Table
+            ===================================== */}
 
             <div className="table-responsive">
 
@@ -76,7 +146,7 @@ const PaperTable = ({
 
                             <th>Downloads</th>
 
-                            <th width="270">
+                            <th className="text-end">
 
                                 Actions
 
@@ -88,276 +158,256 @@ const PaperTable = ({
 
                     <tbody>
 
-                        {papers.map((paper, index) => (
+                        {
 
-                            <tr key={paper._id}>
+                            papers.map((paper, index) => (
 
-                                <td>
+                                <tr key={paper._id}>
 
-                                    {index + 1}
+                                    <td>
 
-                                </td>
+                                        {index + 1}
 
-                                <td>
+                                    </td>
 
-                                    <div className="fw-semibold">
+                                    <td>
 
-                                        {paper.title}
+                                        <div className="fw-semibold text-white">
 
-                                    </div>
+                                            {paper.title}
 
-                                </td>
+                                        </div>
 
-                                <td>
+                                    </td>
 
-                                    {paper.exam?.name || "-"}
+                                    <td>
 
-                                </td>
+                                        {
 
-                                <td>
+                                            paper.exam?.name ||
 
-                                    {paper.subject?.name || "-"}
+                                            "-"
 
-                                </td>
+                                        }
 
-                                <td>
+                                    </td>
 
-                                    {paper.year}
+                                    <td>
 
-                                </td>
+                                        {
 
-                                <td>
+                                            paper.subject?.name ||
 
-                                    {paper.language}
+                                            "-"
 
-                                </td>
+                                        }
 
-                                <td>
+                                    </td>
 
-                                    {
+                                    <td>
 
-                                        paper.isPremium ? (
+                                        {paper.year}
 
-                                            <span className="badge bg-warning text-dark">
+                                    </td>
 
-                                                <Crown
-                                                    size={12}
-                                                    className="me-1"
-                                                />
+                                    <td>
 
-                                                Premium
+                                        {paper.language}
 
-                                            </span>
+                                    </td>
 
-                                        ) : (
+                                    <td>
 
-                                            <span className="badge bg-success">
+                                        {
 
-                                                Free
+                                            paper.isPremium ? (
 
-                                            </span>
+                                                <span className="badge bg-warning text-dark">
 
-                                        )
+                                                    <Crown
+                                                        size={12}
+                                                        className="me-1"
+                                                    />
 
-                                    }
+                                                    Premium
 
-                                </td>
+                                                </span>
 
-                                <td>
+                                            ) : (
 
-                                    {
+                                                <span className="badge bg-success">
 
-                                        paper.isPublished ? (
+                                                    Free
 
-                                            <span className="badge bg-success">
+                                                </span>
 
-                                                Published
+                                            )
 
-                                            </span>
+                                        }
 
-                                        ) : (
+                                    </td>
 
-                                            <span className="badge bg-secondary">
+                                    <td>
 
-                                                Draft
-
-                                            </span>
-
-                                        )
-
-                                    }
-
-                                </td>
-
-                                <td>
-
-                                    {
-
-                                        paper.isActive ? (
-
-                                            <span className="badge bg-primary">
-
-                                                Active
-
-                                            </span>
-
-                                        ) : (
-
-                                            <span className="badge bg-danger">
-
-                                                Inactive
-
-                                            </span>
-
-                                        )
-
-                                    }
-
-                                </td>
-
-                                <td>
-
-                                    {paper.views ?? 0}
-
-                                </td>
-
-                                <td>
-
-                                    {paper.downloads ?? 0}
-
-                                </td>
-
-                                <td>
-
-                                    <div className="d-flex flex-wrap gap-2">
-
-                                        <button
-
-                                            className="btn btn-warning btn-sm"
-
-                                            onClick={() =>
-
-                                                onEdit(paper)
-
-                                            }
-
-                                        >
-
-                                            <Pencil
-                                                size={15}
-                                            />
-
-                                        </button>
-
-                                        <button
-
-                                            className="btn btn-danger btn-sm"
-
-                                            onClick={() =>
-
-                                                onDelete(paper)
-
-                                            }
-
-                                        >
-
-                                            <Trash2
-                                                size={15}
-                                            />
-
-                                        </button>
-
-                                        <button
-
-                                            className={`btn btn-sm ${
+                                        <span
+                                            className={`badge ${
                                                 paper.isPublished
-                                                    ? "btn-outline-secondary"
+                                                    ? "bg-success"
+                                                    : "bg-secondary"
+                                            }`}
+                                        >
+
+                                            {
+
+                                                paper.isPublished
+
+                                                    ? "Published"
+
+                                                    : "Draft"
+
+                                            }
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        <span
+                                            className={`badge ${
+                                                paper.isActive
+                                                    ? "bg-primary"
+                                                    : "bg-danger"
+                                            }`}
+                                        >
+
+                                            {
+
+                                                paper.isActive
+
+                                                    ? "Active"
+
+                                                    : "Inactive"
+
+                                            }
+
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        {paper.views ?? 0}
+
+                                    </td>
+
+                                    <td>
+
+                                        {paper.downloads ?? 0}
+
+                                    </td>
+
+                                    <td className="text-end">
+
+                                        <button
+                                            className="btn btn-sm btn-outline-primary me-2"
+                                            onClick={() =>
+                                                onEdit(paper)
+                                            }
+                                        >
+
+                                            <Pencil size={16} />
+
+                                        </button>
+
+                                        <button
+                                            className="btn btn-sm btn-outline-danger me-2"
+                                            onClick={() =>
+                                                onDelete(paper)
+                                            }
+                                        >
+
+                                            <Trash2 size={16} />
+
+                                        </button>
+
+                                        <button
+                                            className={`btn btn-sm me-2 ${
+                                                paper.isPublished
+
+                                                    ? "btn-outline-warning"
+
                                                     : "btn-outline-success"
                                             }`}
-
                                             onClick={() =>
-
-                                                onPublishToggle(paper)
-
+                                                onPublishToggle(
+                                                    paper
+                                                )
                                             }
-
-                                            title={
-                                                paper.isPublished
-                                                    ? "Unpublish"
-                                                    : "Publish"
-                                            }
-
                                         >
 
                                             {
 
-                                                paper.isPublished ? (
+                                                paper.isPublished
 
-                                                    <EyeOff
-                                                        size={15}
-                                                    />
+                                                    ? (
 
-                                                ) : (
+                                                        <EyeOff size={16} />
 
-                                                    <Eye
-                                                        size={15}
-                                                    />
+                                                    )
 
-                                                )
+                                                    : (
+
+                                                        <Eye size={16} />
+
+                                                    )
 
                                             }
 
                                         </button>
 
                                         <button
-
                                             className={`btn btn-sm ${
                                                 paper.isActive
+
                                                     ? "btn-outline-danger"
+
                                                     : "btn-outline-primary"
                                             }`}
-
                                             onClick={() =>
-
-                                                onStatusToggle(paper)
-
+                                                onStatusToggle(
+                                                    paper
+                                                )
                                             }
-
-                                            title={
-                                                paper.isActive
-                                                    ? "Deactivate"
-                                                    : "Activate"
-                                            }
-
                                         >
 
                                             {
 
-                                                paper.isActive ? (
+                                                paper.isActive
 
-                                                    <XCircle
-                                                        size={15}
-                                                    />
+                                                    ? (
 
-                                                ) : (
+                                                        <XCircle size={16} />
 
-                                                    <CheckCircle
-                                                        size={15}
-                                                    />
+                                                    )
 
-                                                )
+                                                    : (
+
+                                                        <CheckCircle size={16} />
+
+                                                    )
 
                                             }
 
                                         </button>
 
-                                    </div>
+                                    </td>
 
-                                </td>
+                                </tr>
 
-                            </tr>
+                            ))
 
-                        ))}
+                        }
 
                     </tbody>
 
@@ -369,6 +419,6 @@ const PaperTable = ({
 
     );
 
-};
+}
 
 export default PaperTable;

@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 const Question = require("../models/Question");
 const User = require("../models/User");
-const Test = require("../models/MockTestAttempt");
+const MockTestAttempt = require("../models/MockTestAttempt");
 
 const asyncHandler = require("../utils/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");

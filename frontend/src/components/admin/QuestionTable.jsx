@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
+import {
+    Search,
+    Pencil,
+    Trash2,
+    BookOpen,
+} from "lucide-react";
 
-import { FaEdit, FaTrash } from "react-icons/fa";
 
 function QuestionTable({
 
@@ -8,153 +13,371 @@ function QuestionTable({
 
     onEdit,
 
-    onDelete
+    onDelete,
 
 }) {
 
+
     const [search, setSearch] = useState("");
 
-    /*
-    =====================================
-    Search Questions
-    =====================================
-    */
 
     const filteredQuestions = useMemo(() => {
 
-        if (!search.trim()) {
+
+        const value = search
+            .trim()
+            .toLowerCase();
+
+
+        if (!value) {
 
             return questions;
 
         }
 
-        return questions.filter((question) =>
 
-            question.question
+        return questions.filter((question) => {
 
-                .toLowerCase()
 
-                .includes(search.toLowerCase()) ||
+            const questionText =
+                question.question
+                    ?.toLowerCase() || "";
 
-            question.subject
 
-                .toLowerCase()
+            const subject =
+                typeof question.subject === "object"
+                    ? question.subject?.name
+                    : question.subject;
 
-                .includes(search.toLowerCase()) ||
 
-            question.difficulty
+            const difficulty =
+                question.difficulty
+                    ?.toLowerCase() || "";
 
-                .toLowerCase()
 
-                .includes(search.toLowerCase())
+            return (
 
-        );
+                questionText.includes(value) ||
+
+                subject
+                    ?.toLowerCase()
+                    .includes(value) ||
+
+                difficulty.includes(value)
+
+            );
+
+
+        });
+
 
     }, [questions, search]);
 
+
+
     return (
 
-        <div className="card shadow border-0 rounded-4 mt-4">
 
-            <div className="card-body">
+        <div
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
+            className="rounded-4 overflow-hidden"
 
-                    <h4 className="fw-bold">
+            style={{
 
-                        📚 Question Bank
+                background:"#131D31",
 
-                    </h4>
+                border:
+                    "1px solid rgba(255,255,255,.08)"
 
-                    <input
+            }}
 
-                        type="text"
+        >
 
-                        className="form-control"
 
-                        placeholder="Search Questions..."
+            {/* Header */}
 
-                        value={search}
+            <div
 
-                        onChange={(e) =>
+                className="p-4 d-flex justify-content-between align-items-center flex-wrap gap-3"
 
-                            setSearch(e.target.value)
+                style={{
 
-                        }
+                    borderBottom:
+                        "1px solid rgba(255,255,255,.08)"
+
+                }}
+
+            >
+
+
+                <div className="d-flex align-items-center gap-3">
+
+
+                    <div
+
+                        className="rounded-circle d-flex align-items-center justify-content-center"
 
                         style={{
 
-                            width: "300px"
+                            width:48,
+
+                            height:48,
+
+                            background:
+                                "rgba(37,99,235,.15)"
+
+                        }}
+
+                    >
+
+                        <BookOpen
+
+                            size={24}
+
+                            color="#60A5FA"
+
+                        />
+
+                    </div>
+
+
+
+                    <div>
+
+
+                        <h4
+
+                            className="text-white fw-bold mb-1"
+
+                        >
+
+                            Question Bank
+
+                        </h4>
+
+
+                        <p
+
+                            className="text-secondary mb-0"
+
+                        >
+
+                            Manage all questions from one place.
+
+                        </p>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+
+                <div
+
+                    className="position-relative"
+
+                    style={{
+
+                        width:"300px"
+
+                    }}
+
+                >
+
+
+                    <Search
+
+                        size={18}
+
+                        className="position-absolute"
+
+                        style={{
+
+                            left:"14px",
+
+                            top:"50%",
+
+                            transform:
+                                "translateY(-50%)",
+
+                            color:"#94A3B8"
 
                         }}
 
                     />
 
+
+                    <input
+
+                        type="text"
+
+                        className="form-control ps-5"
+
+                        placeholder="Search questions..."
+
+                        value={search}
+
+                        onChange={(e)=>
+
+                            setSearch(e.target.value)
+
+                        }
+
+
+                        style={{
+
+                            background:"#0F172A",
+
+                            color:"#fff",
+
+                            border:
+                                "1px solid rgba(255,255,255,.1)"
+
+                        }}
+
+                    />
+
+
                 </div>
 
-                <div className="table-responsive">
 
-                    <table className="table table-hover align-middle">
+            </div>
 
-                        <thead className="table-dark">
 
-                            <tr>
 
-                                <th>#</th>
 
-                                <th>Question</th>
+            {/* Questions */}
 
-                                <th>Subject</th>
 
-                                <th>Difficulty</th>
+            <div className="p-3">
 
-                                <th>Actions</th>
 
-                            </tr>
+                {
 
-                        </thead>
+                    filteredQuestions.length === 0 ? (
 
-                        <tbody>
 
-                            {
+                        <div
 
-                                filteredQuestions.length === 0 ? (
+                            className="text-center py-5"
 
-                                    <tr>
+                        >
 
-                                        <td
+                            <h5
 
-                                            colSpan="5"
+                                className="text-white"
 
-                                            className="text-center"
+                            >
+
+                                No questions found
+
+                            </h5>
+
+
+                            <p
+
+                                className="text-secondary"
+
+                            >
+
+                                Try changing your search.
+
+                            </p>
+
+
+                        </div>
+
+
+                    ) : (
+
+
+                        filteredQuestions.map(
+
+                            (question,index)=>(
+
+
+                                <div
+
+
+                                    key={question._id}
+
+
+                                    className="mb-3 rounded-4 p-4"
+
+
+                                    style={{
+
+
+                                        background:"#0F172A",
+
+
+                                        border:
+
+                                            "1px solid rgba(255,255,255,.08)",
+
+
+                                        transition:
+                                            "0.25s ease"
+
+
+                                    }}
+
+
+
+                                >
+
+
+
+                                    <div
+
+                                        className="d-flex justify-content-between gap-3"
+
+                                    >
+
+
+
+                                        <div
+
+                                            className="flex-grow-1"
 
                                         >
 
-                                            No questions found.
 
-                                        </td>
 
-                                    </tr>
+                                            <div
 
-                                ) : (
-
-                                    filteredQuestions.map(
-
-                                        (question, index) => (
-
-                                            <tr
-
-                                                key={question._id}
+                                                className="d-flex gap-3 mb-3"
 
                                             >
 
-                                                <td>
 
-                                                    {index + 1}
+                                                <span
 
-                                                </td>
+                                                    className="text-secondary"
 
-                                                <td>
+                                                >
+
+                                                    #{index+1}
+
+                                                </span>
+
+
+
+                                                <h6
+
+                                                    className="text-white mb-0"
+
+                                                    style={{
+
+                                                        lineHeight:
+                                                            "1.6"
+
+                                                    }}
+
+                                                >
 
                                                     {
 
@@ -162,19 +385,109 @@ function QuestionTable({
 
                                                     }
 
-                                                </td>
 
-                                                <td>
+                                                </h6>
+
+
+                                            </div>
+
+
+
+
+                                            <div
+
+                                                className="d-flex flex-wrap gap-2"
+
+                                            >
+
+
+
+                                                <span
+
+                                                    className="badge rounded-pill"
+
+                                                    style={{
+
+                                                        background:
+                                                            "rgba(59,130,246,.15)",
+
+                                                        color:
+                                                            "#60A5FA"
+
+                                                    }}
+
+                                                >
 
                                                     {
 
-                                                        question.subject
+                                                        typeof question.subject === "object"
+
+                                                        ?
+
+                                                        question.subject?.name
+
+                                                        :
+
+                                                        question.subject || "General"
 
                                                     }
 
-                                                </td>
 
-                                                <td>
+                                                </span>
+
+
+
+
+                                                <span
+
+                                                    className="badge rounded-pill"
+
+                                                    style={{
+
+                                                        background:
+
+                                                            question.difficulty === "Easy"
+
+                                                            ?
+
+                                                            "rgba(34,197,94,.15)"
+
+                                                            :
+
+                                                            question.difficulty === "Medium"
+
+                                                            ?
+
+                                                            "rgba(245,158,11,.15)"
+
+                                                            :
+
+                                                            "rgba(239,68,68,.15)",
+
+
+                                                        color:
+
+                                                            question.difficulty === "Easy"
+
+                                                            ?
+
+                                                            "#4ADE80"
+
+                                                            :
+
+                                                            question.difficulty === "Medium"
+
+                                                            ?
+
+                                                            "#FBBF24"
+
+                                                            :
+
+                                                            "#F87171"
+
+                                                    }}
+
+                                                >
 
                                                     {
 
@@ -182,74 +495,129 @@ function QuestionTable({
 
                                                     }
 
-                                                </td>
 
-                                                <td>
+                                                </span>
 
-                                                    <button
 
-                                                        className="btn btn-warning btn-sm me-2"
 
-                                                        onClick={() =>
+                                            </div>
 
-                                                            onEdit(
 
-                                                                question
+                                        </div>
 
-                                                            )
 
-                                                        }
 
-                                                    >
 
-                                                        <FaEdit />
+                                        <div
 
-                                                    </button>
+                                            className="d-flex gap-2"
 
-                                                    <button
+                                        >
 
-                                                        className="btn btn-danger btn-sm"
 
-                                                        onClick={() =>
+                                            <button
 
-                                                            onDelete(
+                                                className="btn btn-sm"
 
-                                                                question
+                                                onClick={()=>
 
-                                                            )
+                                                    onEdit(question)
 
-                                                        }
+                                                }
 
-                                                    >
+                                                style={{
 
-                                                        <FaTrash />
 
-                                                    </button>
+                                                    background:
+                                                        "rgba(59,130,246,.15)",
 
-                                                </td>
 
-                                            </tr>
+                                                    color:
+                                                        "#60A5FA"
 
-                                        )
 
-                                    )
+                                                }}
 
-                                )
+                                            >
 
-                            }
+                                                <Pencil
 
-                        </tbody>
+                                                    size={16}
 
-                    </table>
+                                                />
 
-                </div>
+
+                                            </button>
+
+
+
+
+                                            <button
+
+                                                className="btn btn-sm"
+
+                                                onClick={()=>
+
+                                                    onDelete(question)
+
+                                                }
+
+                                                style={{
+
+
+                                                    background:
+                                                        "rgba(239,68,68,.15)",
+
+
+                                                    color:
+                                                        "#F87171"
+
+
+                                                }}
+
+                                            >
+
+                                                <Trash2
+
+                                                    size={16}
+
+                                                />
+
+
+                                            </button>
+
+
+
+                                        </div>
+
+
+
+                                    </div>
+
+
+
+                                </div>
+
+
+                            )
+
+                        )
+
+
+                    )
+
+                }
+
 
             </div>
 
+
         </div>
+
 
     );
 
 }
+
 
 export default QuestionTable;

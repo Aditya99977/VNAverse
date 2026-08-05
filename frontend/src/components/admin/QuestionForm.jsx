@@ -1,47 +1,331 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-const createFormData = (initialData = {}) => ({
-    question: initialData.question || "",
-    options: initialData.options || ["", "", "", ""],
-    correctAnswer: initialData.correctAnswer || "",
-    subject: initialData.subject || "",
-    difficulty: initialData.difficulty || "Easy",
+import {
+    BookOpen,
+    GraduationCap,
+    Target,
+    CheckCircle2,
+    Save,
+    X,
+} from "lucide-react";
+
+import { getAllExams } from "../../services/examService";
+import { getSubjectsByExam } from "../../services/subjectService";
+
+/*
+==================================================
+Create Initial Form Data
+==================================================
+*/
+
+const createFormData = (question = {}) => ({
+
+    question: question.question || "",
+
+    exam:
+        question.exam?._id ||
+        question.exam ||
+        "",
+
+    subject:
+        question.subject?._id ||
+        question.subject ||
+        "",
+
+    difficulty:
+        question.difficulty ||
+        "Easy",
+
+    options:
+        question.options?.length === 4
+            ? question.options
+            : ["", "", "", ""],
+
+    /*
+    Store option index
+    */
+
+    correctAnswer:
+
+        typeof question.correctAnswer === "number"
+
+            ? question.correctAnswer
+
+            : 0,
+
 });
+
+/*
+==================================================
+Component
+==================================================
+*/
 
 function QuestionForm({
 
-    onSubmit,
-
     initialData = {},
 
-    loading
+    onSubmit,
+
+    onCancel,
+
+    loading = false,
 
 }) {
 
-    const [formData, setFormData] = useState(() => createFormData(initialData));
-
     /*
-    =====================================
-    Handle Input Change
-    =====================================
+    ==================================================
+    State
+    ==================================================
     */
 
-    const handleChange = (e) => {
+    const [formData, setFormData] = useState(
 
-        setFormData({
+        createFormData(initialData)
 
-            ...formData,
+    );
 
-            [e.target.name]: e.target.value
+    const [exams, setExams] = useState([]);
 
-        });
+    const [subjects, setSubjects] = useState([]);
+
+    const [loadingExams, setLoadingExams] = useState(true);
+
+    const [loadingSubjects, setLoadingSubjects] = useState(false);
+
+    /*
+    ==================================================
+    Load Exams
+    ==================================================
+    */
+
+    useEffect(() => {
+
+        loadExams();
+
+    }, []);
+
+    /*
+    ==================================================
+    Load Subjects on Exam Change
+    ==================================================
+    */
+
+    useEffect(() => {
+
+        if (!formData.exam) {
+
+            setSubjects([]);
+
+            return;
+
+        }
+
+        loadSubjects(formData.exam);
+
+    }, [formData.exam]);
+
+    /*
+    ==================================================
+    Load Exams
+    ==================================================
+    */
+
+    const loadExams = async () => {
+
+        try {
+
+            setLoadingExams(true);
+
+            const response = await getAllExams();
+
+            let examList = [];
+
+            if (Array.isArray(response)) {
+
+                examList = response;
+
+            }
+
+            else if (Array.isArray(response?.data)) {
+
+                examList = response.data;
+
+            }
+
+            else if (Array.isArray(response?.exams)) {
+
+                examList = response.exams;
+
+            }
+
+            else if (
+
+                Array.isArray(response?.data?.exams)
+
+            ) {
+
+                examList = response.data.exams;
+
+            }
+
+            setExams(examList);
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            toast.error(
+
+                "Unable to load exams."
+
+            );
+
+        }
+
+        finally {
+
+            setLoadingExams(false);
+
+        }
 
     };
 
     /*
-    =====================================
+    ==================================================
+    Load Subjects
+    ==================================================
+    */
+
+    const loadSubjects = async (examId) => {
+
+        try {
+
+            setLoadingSubjects(true);
+
+            const response = await getSubjectsByExam(
+
+                examId
+
+            );
+
+            let subjectList = [];
+
+            if (Array.isArray(response)) {
+
+                subjectList = response;
+
+            }
+
+            else if (
+
+                Array.isArray(response?.subjects)
+
+            ) {
+
+                subjectList = response.subjects;
+
+            }
+
+            else if (
+
+                Array.isArray(response?.data)
+
+            ) {
+
+                subjectList = response.data;
+
+            }
+
+            else if (
+
+                Array.isArray(
+
+                    response?.data?.subjects
+
+                )
+
+            ) {
+
+                subjectList =
+
+                    response.data.subjects;
+
+            }
+
+            setSubjects(subjectList);
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            toast.error(
+
+                "Unable to load subjects."
+
+            );
+
+        }
+
+        finally {
+
+            setLoadingSubjects(false);
+
+        }
+
+    };    /*
+    ==================================================
+    Handle Input Change
+    ==================================================
+    */
+
+    const handleChange = (event) => {
+
+        const {
+
+            name,
+
+            value,
+
+        } = event.target;
+
+        setFormData((previous) => ({
+
+            ...previous,
+
+            [name]: value,
+
+        }));
+
+        /*
+        Reset Subject when Exam changes
+        */
+
+        if (name === "exam") {
+
+            setFormData((previous) => ({
+
+                ...previous,
+
+                exam: value,
+
+                subject: "",
+
+            }));
+
+        }
+
+    };
+
+    /*
+    ==================================================
     Handle Option Change
-    =====================================
+    ==================================================
     */
 
     const handleOptionChange = (
@@ -54,43 +338,271 @@ function QuestionForm({
 
         const updatedOptions = [
 
-            ...formData.options
+            ...formData.options,
 
         ];
 
         updatedOptions[index] = value;
 
-        setFormData({
+        setFormData((previous) => ({
 
-            ...formData,
+            ...previous,
 
-            options: updatedOptions
+            options: updatedOptions,
 
-        });
+        }));
 
     };
 
     /*
-    =====================================
-    Submit
-    =====================================
+    ==================================================
+    Handle Correct Answer
+    ==================================================
     */
 
-    const handleSubmit = (e) => {
+    const handleCorrectAnswer = (
 
-        e.preventDefault();
+        index
 
-        onSubmit(formData);
+    ) => {
+
+        setFormData((previous) => ({
+
+            ...previous,
+
+            correctAnswer: index,
+
+        }));
 
     };
 
-    return (
+    /*
+    ==================================================
+    Validation
+    ==================================================
+    */
+
+    const validateForm = () => {
+
+        if (
+
+            !formData.question.trim()
+
+        ) {
+
+            toast.error(
+
+                "Question is required."
+
+            );
+
+            return false;
+
+        }
+
+        if (
+
+            !formData.exam
+
+        ) {
+
+            toast.error(
+
+                "Please select an exam."
+
+            );
+
+            return false;
+
+        }
+
+        if (
+
+            !formData.subject
+
+        ) {
+
+            toast.error(
+
+                "Please select a subject."
+
+            );
+
+            return false;
+
+        }
+
+        const cleanedOptions =
+
+            formData.options.map(
+
+                (option) =>
+
+                    option.trim()
+
+            );
+
+        if (
+
+            cleanedOptions.some(
+
+                (option) => !option
+
+            )
+
+        ) {
+
+            toast.error(
+
+                "All four options are required."
+
+            );
+
+            return false;
+
+        }
+
+        const uniqueOptions =
+
+            new Set(cleanedOptions);
+
+        if (
+
+            uniqueOptions.size !== 4
+
+        ) {
+
+            toast.error(
+
+                "Options must be unique."
+
+            );
+
+            return false;
+
+        }
+
+        if (
+
+            formData.correctAnswer < 0 ||
+
+            formData.correctAnswer > 3
+
+        ) {
+
+            toast.error(
+
+                "Select the correct answer."
+
+            );
+
+            return false;
+
+        }
+
+        return true;
+
+    };
+
+    /*
+    ==================================================
+    Submit
+    ==================================================
+    */
+
+    const handleSubmit = (
+
+        event
+
+    ) => {
+
+        event.preventDefault();
+
+        if (
+
+            !validateForm()
+
+        ) {
+
+            return;
+
+        }
+
+        onSubmit({
+
+            ...formData,
+
+            options:
+
+                formData.options.map(
+
+                    (option) =>
+
+                        option.trim()
+
+                ),
+
+            question:
+
+                formData.question.trim(),
+
+        });
+
+    };    return (
 
         <form onSubmit={handleSubmit}>
 
-            <div className="mb-3">
+            {/* =====================================
+                Header
+            ===================================== */}
 
-                <label className="form-label">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h4 className="text-white fw-bold mb-1">
+
+                        {
+                            initialData?._id
+                                ? "Edit Question"
+                                : "Create New Question"
+                        }
+
+                    </h4>
+
+                    <p className="text-secondary mb-0">
+
+                        Add a question by selecting the exam, subject, difficulty and answer.
+
+                    </p>
+
+                </div>
+
+                <div
+                    className="rounded-circle d-flex align-items-center justify-content-center"
+                    style={{
+                        width: 60,
+                        height: 60,
+                        background: "rgba(37,99,235,.15)",
+                    }}
+                >
+
+                    <BookOpen
+                        size={28}
+                        color="#2563EB"
+                    />
+
+                </div>
+
+            </div>
+
+            {/* =====================================
+                Question
+            ===================================== */}
+
+            <div className="mb-4">
+
+                <label className="form-label fw-semibold text-light">
 
                     Question
 
@@ -98,9 +610,9 @@ function QuestionForm({
 
                 <textarea
 
-                    className="form-control"
+                    rows="5"
 
-                    rows="3"
+                    className="form-control"
 
                     name="question"
 
@@ -108,65 +620,36 @@ function QuestionForm({
 
                     onChange={handleChange}
 
-                    required
+                    placeholder="Enter the complete question..."
+
+                    style={{
+                        background: "#0F172A",
+                        color: "#fff",
+                        border: "1px solid rgba(255,255,255,.08)",
+                    }}
 
                 />
 
             </div>
 
-            {
+            {/* =====================================
+                Exam / Subject / Difficulty
+            ===================================== */}
 
-                formData.options.map((option, index) => (
+            <div className="row g-4 mb-4">
 
-                    <div
+                {/* Exam */}
 
-                        className="mb-3"
+                <div className="col-lg-4">
 
-                        key={index}
+                    <label className="form-label fw-semibold text-light">
 
-                    >
-
-                        <label className="form-label">
-
-                            Option {String.fromCharCode(65 + index)}
-
-                        </label>
-
-                        <input
-
-                            className="form-control"
-
-                            value={option}
-
-                            onChange={(e) =>
-
-                                handleOptionChange(
-
-                                    index,
-
-                                    e.target.value
-
-                                )
-
-                            }
-
-                            required
-
+                        <GraduationCap
+                            size={16}
+                            className="me-2"
                         />
 
-                    </div>
-
-                ))
-
-            }
-
-            <div className="row">
-
-                <div className="col-md-4">
-
-                    <label>
-
-                        Correct Answer
+                        Exam
 
                     </label>
 
@@ -174,51 +657,53 @@ function QuestionForm({
 
                         className="form-select"
 
-                        name="correctAnswer"
+                        name="exam"
 
-                        value={formData.correctAnswer}
+                        value={formData.exam}
 
                         onChange={handleChange}
+
+                        disabled={loadingExams}
+
+                        style={{
+                            background: "#0F172A",
+                            color: "#fff",
+                            border: "1px solid rgba(255,255,255,.08)",
+                        }}
 
                     >
 
                         <option value="">
 
-                            Select
+                            {
+
+                                loadingExams
+
+                                    ? "Loading Exams..."
+
+                                    : "Select Exam"
+
+                            }
 
                         </option>
 
                         {
 
-                            formData.options.map(
+                            exams.map((exam) => (
 
-                                (option, index) => (
+                                <option
 
-                                    <option
+                                    key={exam._id}
 
-                                        key={index}
+                                    value={exam._id}
 
-                                        value={option}
+                                >
 
-                                    >
+                                    {exam.name}
 
-                                        {
+                                </option>
 
-                                            option ||
-
-                                            `Option ${String.fromCharCode(
-
-                                                65 + index
-
-                                            )}`
-
-                                        }
-
-                                    </option>
-
-                                )
-
-                            )
+                            ))
 
                         }
 
@@ -226,9 +711,16 @@ function QuestionForm({
 
                 </div>
 
-                <div className="col-md-4">
+                {/* Subject */}
 
-                    <label>
+                <div className="col-lg-4">
+
+                    <label className="form-label fw-semibold text-light">
+
+                        <BookOpen
+                            size={16}
+                            className="me-2"
+                        />
 
                         Subject
 
@@ -244,45 +736,67 @@ function QuestionForm({
 
                         onChange={handleChange}
 
+                        disabled={
+                            !formData.exam ||
+                            loadingSubjects
+                        }
+
+                        style={{
+                            background: "#0F172A",
+                            color: "#fff",
+                            border: "1px solid rgba(255,255,255,.08)",
+                        }}
+
                     >
 
                         <option value="">
 
-                            Select
+                            {
+
+                                loadingSubjects
+
+                                    ? "Loading Subjects..."
+
+                                    : "Select Subject"
+
+                            }
 
                         </option>
 
-                        <option>
+                        {
 
-                            Reasoning
+                            subjects.map((subject) => (
 
-                        </option>
+                                <option
 
-                        <option>
+                                    key={subject._id}
 
-                            English
+                                    value={subject._id}
 
-                        </option>
+                                >
 
-                        <option>
+                                    {subject.name}
 
-                            Quantitative Aptitude
+                                </option>
 
-                        </option>
+                            ))
 
-                        <option>
-
-                            General Awareness
-
-                        </option>
+                        }
 
                     </select>
 
                 </div>
 
-                <div className="col-md-4">
+                {/* Difficulty */}
 
-                    <label>
+                <div className="col-lg-4">
+
+                    <label className="form-label fw-semibold text-light">
+
+                        <Target
+                            size={16}
+                            className="me-2"
+                        />
 
                         Difficulty
 
@@ -298,21 +812,27 @@ function QuestionForm({
 
                         onChange={handleChange}
 
+                        style={{
+                            background: "#0F172A",
+                            color: "#fff",
+                            border: "1px solid rgba(255,255,255,.08)",
+                        }}
+
                     >
 
-                        <option>
+                        <option value="Easy">
 
                             Easy
 
                         </option>
 
-                        <option>
+                        <option value="Medium">
 
                             Medium
 
                         </option>
 
-                        <option>
+                        <option value="Hard">
 
                             Hard
 
@@ -322,25 +842,294 @@ function QuestionForm({
 
                 </div>
 
+            </div>            {/* =====================================
+                Options
+            ===================================== */}
+
+            <div className="mb-4">
+
+                <div className="d-flex align-items-center mb-3">
+
+                    <CheckCircle2
+                        size={20}
+                        className="text-primary me-2"
+                    />
+
+                    <h5 className="text-white fw-bold mb-0">
+
+                        Answer Options
+
+                    </h5>
+
+                </div>
+
+                <div className="row g-4">
+
+                    {
+
+                        formData.options.map(
+
+                            (option, index) => (
+
+                                <div
+
+                                    key={index}
+
+                                    className="col-lg-6"
+
+                                >
+
+                                    <div
+
+                                        className="rounded-4 p-4 h-100"
+
+                                        style={{
+
+                                            background:
+
+                                                "#0F172A",
+
+                                            border:
+
+                                                formData.correctAnswer === index
+
+                                                    ? "1px solid #2563EB"
+
+                                                    : "1px solid rgba(255,255,255,.08)",
+
+                                            transition:
+
+                                                "all .25s ease",
+
+                                        }}
+
+                                    >
+
+                                        {/* Option Header */}
+
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+
+                                            <h6 className="text-white fw-semibold mb-0">
+
+                                                Option{" "}
+
+                                                {
+
+                                                    String.fromCharCode(
+
+                                                        65 + index
+
+                                                    )
+
+                                                }
+
+                                            </h6>
+
+                                            <div className="form-check mb-0">
+
+                                                <input
+
+                                                    className="form-check-input"
+
+                                                    type="radio"
+
+                                                    name="correctAnswer"
+
+                                                    checked={
+
+                                                        formData.correctAnswer === index
+
+                                                    }
+
+                                                    onChange={() =>
+
+                                                        handleCorrectAnswer(
+
+                                                            index
+
+                                                        )
+
+                                                    }
+
+                                                />
+
+                                            </div>
+
+                                        </div>
+
+                                        {/* Option Input */}
+
+                                        <input
+
+                                            type="text"
+
+                                            className="form-control"
+
+                                            value={option}
+
+                                            placeholder={`Enter Option ${String.fromCharCode(
+
+                                                65 + index
+
+                                            )}`}
+
+                                            onChange={(event) =>
+
+                                                handleOptionChange(
+
+                                                    index,
+
+                                                    event.target.value
+
+                                                )
+
+                                            }
+
+                                            style={{
+
+                                                background:
+
+                                                    "#131D31",
+
+                                                color: "#fff",
+
+                                                border:
+
+                                                    "1px solid rgba(255,255,255,.08)",
+
+                                            }}
+
+                                        />
+
+                                        {
+
+                                            formData.correctAnswer === index && (
+
+                                                <small className="text-primary d-block mt-3">
+
+                                                    ✓ Correct Answer
+
+                                                </small>
+
+                                            )
+
+                                        }
+
+                                    </div>
+
+                                </div>
+
+                            )
+
+                        )
+
+                    }
+
+                </div>
+
             </div>
 
-            <div className="text-end mt-4">
+            {/* =====================================
+                Selected Answer Preview
+            ===================================== */}
+
+            <div
+
+                className="rounded-4 p-4 mb-4"
+
+                style={{
+
+                    background: "#0F172A",
+
+                    border:
+
+                        "1px solid rgba(255,255,255,.08)",
+
+                }}
+
+            >
+
+                <h6 className="text-white fw-bold mb-2">
+
+                    Selected Correct Answer
+
+                </h6>
+
+                <p className="text-secondary mb-0">
+
+                    Option{" "}
+
+                    {
+
+                        String.fromCharCode(
+
+                            65 +
+
+                                formData.correctAnswer
+
+                        )
+
+                    }
+
+                </p>
+
+            </div>            {/* =====================================
+                Footer
+            ===================================== */}
+
+            <hr
+                className="my-4"
+                style={{
+                    borderColor: "rgba(255,255,255,.08)",
+                }}
+            />
+
+            <div className="d-flex justify-content-end gap-3">
 
                 <button
-
-                    className="btn btn-primary"
-
+                    type="button"
+                    className="btn btn-outline-light px-4 d-flex align-items-center gap-2"
+                    onClick={onCancel}
                     disabled={loading}
-
                 >
+
+                    <X size={18} />
+
+                    Cancel
+
+                </button>
+
+                <button
+                    type="submit"
+                    className="btn btn-primary px-4 d-flex align-items-center gap-2"
+                    disabled={loading}
+                >
+
+                    <Save size={18} />
 
                     {
 
                         loading
 
-                            ? "Saving..."
+                            ? (
 
-                            : "Save Question"
+                                initialData?._id
+
+                                    ? "Updating..."
+
+                                    : "Creating..."
+
+                            )
+
+                            : (
+
+                                initialData?._id
+
+                                    ? "Update Question"
+
+                                    : "Create Question"
+
+                            )
 
                     }
 

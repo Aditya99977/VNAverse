@@ -2,6 +2,24 @@ import api from "./api";
 
 /*
 ==================================================
+Helper
+==================================================
+*/
+
+const unwrapResponse = (response) => {
+
+    if (response?.data !== undefined) {
+
+        return response.data;
+
+    }
+
+    return response;
+
+};
+
+/*
+==================================================
 Student APIs
 ==================================================
 */
@@ -11,11 +29,13 @@ Student APIs
  * GET /api/subjects/recommended/me
  */
 export const getRecommendedSubjects = async () => {
+
     const { data } = await api.get(
         "/subjects/recommended/me"
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /**
@@ -23,11 +43,13 @@ export const getRecommendedSubjects = async () => {
  * GET /api/subjects/exam/:examId
  */
 export const getSubjectsByExam = async (examId) => {
+
     const { data } = await api.get(
         `/subjects/exam/${examId}`
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /*
@@ -41,9 +63,13 @@ Admin APIs
  * GET /api/subjects
  */
 export const getAllSubjects = async () => {
-    const { data } = await api.get("/subjects");
 
-    return data;
+    const { data } = await api.get(
+        "/subjects"
+    );
+
+    return unwrapResponse(data);
+
 };
 
 /**
@@ -51,11 +77,13 @@ export const getAllSubjects = async () => {
  * GET /api/subjects/:id
  */
 export const getSubjectById = async (subjectId) => {
+
     const { data } = await api.get(
         `/subjects/${subjectId}`
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /**
@@ -63,12 +91,14 @@ export const getSubjectById = async (subjectId) => {
  * POST /api/subjects
  */
 export const createSubject = async (subjectData) => {
+
     const { data } = await api.post(
         "/subjects",
         subjectData
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /**
@@ -79,12 +109,14 @@ export const updateSubject = async (
     subjectId,
     subjectData
 ) => {
+
     const { data } = await api.put(
         `/subjects/${subjectId}`,
         subjectData
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
 
 /**
@@ -92,9 +124,11 @@ export const updateSubject = async (
  * DELETE /api/subjects/:id
  */
 export const deleteSubject = async (subjectId) => {
+
     const { data } = await api.delete(
         `/subjects/${subjectId}`
     );
 
-    return data;
+    return unwrapResponse(data);
+
 };
