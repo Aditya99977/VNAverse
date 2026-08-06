@@ -196,20 +196,38 @@ app.use((req, res) => {
 // =============================================
 
 app.use((error, req, res, next) => {
-    console.error("Request failed:", error.message);
+
+    console.log("\n========================================");
+    console.log("❌ GLOBAL ERROR");
+    console.log("========================================");
+    console.log("Message:");
+    console.log(error.message);
+
+    console.log("\nName:");
+    console.log(error.name);
+
+    console.log("\nStatus:");
+    console.log(error.statusCode || error.status || 500);
+
+    console.log("\nStack:");
+    console.log(error.stack);
+
+    console.log("\nComplete Error Object:");
+    console.dir(error, { depth: null });
+
+    console.log("========================================\n");
 
     const statusCode =
         error.statusCode || error.status || 500;
 
-    const isClientError =
-        statusCode >= 400 && statusCode < 500;
-
     res.status(statusCode).json({
+
         success: false,
-        message: isClientError
-            ? error.message
-            : "Something went wrong. Please try again later.",
+
+        message: error.message || "Internal Server Error",
+
     });
+
 });
 
 // =============================================

@@ -118,25 +118,32 @@ Normalize Data
 =====================================
 */
 
-questionSchema.pre("save", function (next) {
+questionSchema.pre("save", function () {
 
-    this.question = this.question.trim();
+    if (this.question) {
+        this.question = this.question.trim();
+    }
 
-    this.options = this.options.map((option) =>
-        option.trim()
-    );
+    if (Array.isArray(this.options)) {
+        this.options = this.options.map(
+            (option) => option.trim()
+        );
+    }
 
-    this.correctAnswer =
-        this.correctAnswer.trim();
+    if (this.correctAnswer) {
+        this.correctAnswer = this.correctAnswer.trim();
+    }
 
-    this.explanation =
-        this.explanation.trim();
+    if (this.explanation) {
+        this.explanation = this.explanation.trim();
+    }
 
-    this.tags = this.tags.map((tag) =>
-        tag.trim().toLowerCase()
-    );
+    if (Array.isArray(this.tags)) {
+        this.tags = this.tags.map(
+            (tag) => tag.trim().toLowerCase()
+        );
+    }
 
-    next();
 });
 
 module.exports = mongoose.model(
