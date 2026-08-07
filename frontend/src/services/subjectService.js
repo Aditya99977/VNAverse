@@ -2,24 +2,6 @@ import api from "./api";
 
 /*
 ==================================================
-Helper
-==================================================
-*/
-
-const unwrapResponse = (response) => {
-
-    if (response?.data !== undefined) {
-
-        return response.data;
-
-    }
-
-    return response;
-
-};
-
-/*
-==================================================
 Student APIs
 ==================================================
 */
@@ -34,7 +16,7 @@ export const getRecommendedSubjects = async () => {
         "/subjects/recommended/me"
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };
 
@@ -48,7 +30,7 @@ export const getSubjectsByExam = async (examId) => {
         `/subjects/exam/${examId}`
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };
 
@@ -68,7 +50,7 @@ export const getAllSubjects = async () => {
         "/subjects"
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };
 
@@ -82,7 +64,7 @@ export const getSubjectById = async (subjectId) => {
         `/subjects/${subjectId}`
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };
 
@@ -97,7 +79,7 @@ export const createSubject = async (subjectData) => {
         subjectData
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };
 
@@ -115,7 +97,7 @@ export const updateSubject = async (
         subjectData
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };
 
@@ -129,6 +111,6 @@ export const deleteSubject = async (subjectId) => {
         `/subjects/${subjectId}`
     );
 
-    return unwrapResponse(data);
+    return data;
 
 };

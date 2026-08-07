@@ -10,6 +10,7 @@ const {
 } = require("./evaluationService");
 
 class PracticeService {
+
     /*
     ==================================================
     Start Practice
@@ -23,74 +24,157 @@ class PracticeService {
         difficulty,
         questionCount,
     }) {
-        // Validate Exam
 
-        const exam = await examRepository.findById(examId);
+        /*
+        ==========================================
+        Validate Exam
+        ==========================================
+        */
+
+        const exam =
+            await examRepository.findById(examId);
 
         if (!exam) {
-            throw new AppError("Exam not found.", 404);
+
+            throw new AppError(
+                "Exam not found.",
+                404
+            );
+
         }
 
-        // Validate Subject
+        /*
+        ==========================================
+        Validate Subject
+        ==========================================
+        */
 
-        const subject = await subjectRepository.findById(subjectId);
+        const subject =
+            await subjectRepository.findById(subjectId);
 
         if (!subject) {
-            throw new AppError("Subject not found.", 404);
+
+            throw new AppError(
+                "Subject not found.",
+                404
+            );
+
         }
 
-        // Ensure subject belongs to selected exam
+        /*
+        ==========================================
+        Ensure Subject Belongs To Exam
+        ==========================================
+        */
 
-        if (String(subject.exam) !== String(examId)) {
+        const subjectExamId =
+            subject.exam?._id || subject.exam;
+
+        if (String(subjectExamId) !== String(examId)) {
+
             throw new AppError(
                 "Selected subject does not belong to the selected exam.",
                 400
             );
+
         }
 
-        // Validate Question Count
+        /*
+        ==========================================
+        Validate Question Count
+        ==========================================
+        */
 
         if (!questionCount || questionCount <= 0) {
+
             throw new AppError(
                 "Question count must be greater than zero.",
                 400
             );
+
         }
 
-        // Fetch Questions
+        /*
+        ==========================================
+        Build Dynamic Query
+        ==========================================
+        */
 
-        const questions = await questionRepository.getRandomQuestions(
-            {
-                subject: subjectId,
-                difficulty,
-                isActive: true,
-            },
-            questionCount
-        );
+        const filters = {
+
+            subject: subjectId,
+
+            isActive: true,
+
+        };
+
+        // Apply difficulty filter only when selected
+
+        if (
+            difficulty &&
+            difficulty.trim() !== ""
+        ) {
+
+            filters.difficulty = difficulty;
+
+        }
+
+        /*
+        ==========================================
+        Fetch Questions
+        ==========================================
+        */
+
+        const questions =
+            await questionRepository.getRandomQuestions(
+                filters,
+                questionCount
+            );
 
         if (!questions.length) {
+
             throw new AppError(
                 "No questions available for the selected criteria.",
                 404
             );
+
         }
 
-        // Never expose answers
+        /*
+        ==========================================
+        Hide Correct Answers
+        ==========================================
+        */
 
-        const sanitizedQuestions = questions.map((question) => ({
-            _id: question._id,
-            question: question.question,
-            options: question.options,
-            difficulty: question.difficulty,
-            marks: question.marks,
-        }));
+        const sanitizedQuestions =
+            questions.map((question) => ({
+
+                _id: question._id,
+
+                question: question.question,
+
+                options: question.options,
+
+                difficulty: question.difficulty,
+
+                marks: question.marks,
+
+            }));
 
         return {
+
             exam,
+
             subject,
-            totalQuestions: sanitizedQuestions.length,
-            questions: sanitizedQuestions,
+
+            totalQuestions:
+                sanitizedQuestions.length,
+
+            questions:
+                sanitizedQuestions,
+
         };
+
     }
 
     /*
@@ -100,34 +184,43 @@ class PracticeService {
     */
 
     async submitPractice({
-        userId,
-        examId,
-        subjectId,
-        answers,
-        totalTime,
-    }) {
-        // Fetch all questions in one query
 
-        const questionIds = answers.map((answer) => answer.questionId);
+        userId,
+
+        examId,
+
+        subjectId,
+
+        answers,
+
+        totalTime,
+
+    }) {
+
+        const questionIds =
+            answers.map(
+                (answer) => answer.questionId
+            );
 
         const questions =
-            await questionRepository.findByIds(questionIds);
+            await questionRepository.findByIds(
+                questionIds
+            );
 
         if (!questions.length) {
+
             throw new AppError(
                 "No valid questions found.",
                 404
             );
+
         }
 
-        // Evaluate
-
-        const evaluation = evaluateAnswers(
-            questions,
-            answers
-        );
-
-        // Save Attempt
+        const evaluation =
+            evaluateAnswers(
+                questions,
+                answers
+            );
 
         const attempt =
             await practiceAttemptRepository.create({
@@ -164,9 +257,13 @@ class PracticeService {
             });
 
         return {
+
             attempt,
+
             result: evaluation,
+
         };
+
     }
 
     /*
@@ -176,9 +273,11 @@ class PracticeService {
     */
 
     async getPracticeHistory(userId) {
+
         return await practiceAttemptRepository.findByUser(
             userId
         );
+
     }
 
     /*
@@ -188,17 +287,21 @@ class PracticeService {
     */
 
     async getPracticeById(id) {
+
         const attempt =
             await practiceAttemptRepository.findById(id);
 
         if (!attempt) {
+
             throw new AppError(
                 "Practice attempt not found.",
                 404
             );
+
         }
 
         return attempt;
+
     }
 
     /*
@@ -208,10 +311,13 @@ class PracticeService {
     */
 
     async deletePractice(id) {
+
         await this.getPracticeById(id);
 
         return await practiceAttemptRepository.delete(id);
+
     }
+
 }
 
 module.exports = new PracticeService();
