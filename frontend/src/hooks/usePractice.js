@@ -515,36 +515,41 @@ const examId = currentExam?._id || "";
                     }));
 
                 const response =
-                    await submitPractice({
+    await submitPractice({
 
-                        examId,
+        examId,
 
-                        subjectId: subject,
+        subjectId: subject,
 
-                        answers:
-                            formattedAnswers,
+        answers: formattedAnswers,
 
-                        totalTime,
+        totalTime,
 
-                    });
+    });
 
-                if (!response.success) {
+if (!response.success) {
 
-                    throw new Error(
+    throw new Error(
+        response.message ||
+        "Unable to submit practice."
+    );
 
-                        response.message ||
+}
 
-                            "Unable to submit practice."
+const practiceResult =
+    response.data?.result || null;
 
-                    );
+if (!practiceResult) {
 
-                }
+    throw new Error(
+        "Practice result was not returned."
+    );
 
-                setResult(
-                    response.data.result
-                );
+}
 
-                setCompleted(true);
+setResult(practiceResult);
+
+setCompleted(true);
 
             }
 

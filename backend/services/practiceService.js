@@ -3,7 +3,6 @@ const AppError = require("../utils/AppError");
 const examRepository = require("../repositories/examRepository");
 const subjectRepository = require("../repositories/subjectRepository");
 const questionRepository = require("../repositories/questionRepository");
-const practiceAttemptRepository = require("../repositories/practiceAttemptRepository");
 
 const {
     evaluateAnswers,
@@ -18,7 +17,6 @@ class PracticeService {
     */
 
     async startPractice({
-        userId,
         examId,
         subjectId,
         difficulty,
@@ -96,7 +94,7 @@ class PracticeService {
 
         /*
         ==========================================
-        Build Dynamic Query
+        Build Query
         ==========================================
         */
 
@@ -108,12 +106,7 @@ class PracticeService {
 
         };
 
-        // Apply difficulty filter only when selected
-
-        if (
-            difficulty &&
-            difficulty.trim() !== ""
-        ) {
+        if (difficulty && difficulty.trim() !== "") {
 
             filters.difficulty = difficulty;
 
@@ -167,11 +160,9 @@ class PracticeService {
 
             subject,
 
-            totalQuestions:
-                sanitizedQuestions.length,
+            totalQuestions: sanitizedQuestions.length,
 
-            questions:
-                sanitizedQuestions,
+            questions: sanitizedQuestions,
 
         };
 
@@ -185,17 +176,17 @@ class PracticeService {
 
     async submitPractice({
 
-        userId,
-
-        examId,
-
-        subjectId,
-
         answers,
 
         totalTime,
 
     }) {
+
+        /*
+        ==========================================
+        Fetch Questions
+        ==========================================
+        */
 
         const questionIds =
             answers.map(
@@ -216,105 +207,35 @@ class PracticeService {
 
         }
 
+        /*
+        ==========================================
+        Evaluate Answers
+        ==========================================
+        */
+
         const evaluation =
             evaluateAnswers(
                 questions,
                 answers
             );
 
-        const attempt =
-            await practiceAttemptRepository.create({
-
-                user: userId,
-
-                exam: examId,
-
-                subject: subjectId,
-
-                questionsSolved:
-                    evaluation.attemptedQuestions,
-
-                totalQuestions:
-                    evaluation.totalQuestions,
-
-                correctAnswers:
-                    evaluation.correctAnswers,
-
-                wrongAnswers:
-                    evaluation.wrongAnswers,
-
-                skippedQuestions:
-                    evaluation.skippedQuestions,
-
-                score:
-                    evaluation.score,
-
-                accuracy:
-                    evaluation.accuracy,
-
-                totalTime,
-
-            });
+        /*
+        ==========================================
+        Return Result
+        ==========================================
+        */
 
         return {
 
-            attempt,
+            result: {
 
-            result: evaluation,
+                ...evaluation,
+
+                totalTime,
+
+            },
 
         };
-
-    }
-
-    /*
-    ==================================================
-    Practice History
-    ==================================================
-    */
-
-    async getPracticeHistory(userId) {
-
-        return await practiceAttemptRepository.findByUser(
-            userId
-        );
-
-    }
-
-    /*
-    ==================================================
-    Practice Details
-    ==================================================
-    */
-
-    async getPracticeById(id) {
-
-        const attempt =
-            await practiceAttemptRepository.findById(id);
-
-        if (!attempt) {
-
-            throw new AppError(
-                "Practice attempt not found.",
-                404
-            );
-
-        }
-
-        return attempt;
-
-    }
-
-    /*
-    ==================================================
-    Delete Practice
-    ==================================================
-    */
-
-    async deletePractice(id) {
-
-        await this.getPracticeById(id);
-
-        return await practiceAttemptRepository.delete(id);
 
     }
 

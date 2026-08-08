@@ -45,6 +45,15 @@ POST /api/practice/submit
 
 exports.submitPractice = asyncHandler(async (req, res) => {
 
+    console.log("\n========================================");
+    console.log("PRACTICE SUBMIT REQUEST");
+    console.log("========================================");
+    console.log("Exam ID:", req.body.examId);
+    console.log("Subject ID:", req.body.subjectId);
+    console.log("Total Time Received:", req.body.totalTime);
+    console.log("Answers Submitted:", req.body.answers?.length || 0);
+    console.log("========================================\n");
+
     const result = await practiceService.submitPractice({
 
         userId: req.user.id,
@@ -58,6 +67,12 @@ exports.submitPractice = asyncHandler(async (req, res) => {
         totalTime: req.body.totalTime,
 
     });
+
+    console.log("========================================");
+    console.log("PRACTICE RESPONSE");
+    console.log("========================================");
+    console.log(result);
+    console.log("========================================\n");
 
     res.status(200).json(
 

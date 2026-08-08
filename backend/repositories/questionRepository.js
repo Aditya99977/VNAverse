@@ -91,24 +91,51 @@ class QuestionRepository {
         }).lean();
     }
 
-    /*
-    ==========================================
-    Get Random Questions
-    ==========================================
-    */
+   /*
+==========================================
+Get Random Questions
+==========================================
+*/
 
-    async getRandomQuestions(match, limit = 10) {
-        return Question.aggregate([
-            {
-                $match: match,
-            },
-            {
-                $sample: {
-                    size: Number(limit),
-                },
-            },
-        ]);
+async getRandomQuestions(match, limit = 10) {
+
+    console.log("\n==============================");
+    console.log("QUESTION QUERY");
+    console.log("==============================");
+
+    console.log("MATCH FILTER:");
+    console.log(match);
+
+    const questions = await Question.find(match).lean();
+
+    console.log("\nMATCHED QUESTIONS:", questions.length);
+
+    if (questions.length) {
+
+        console.log("\nQUESTIONS FOUND:");
+
+        questions.forEach((question, index) => {
+
+            console.log(`\nQuestion ${index + 1}`);
+
+            console.log({
+                id: question._id.toString(),
+                subject: question.subject.toString(),
+                difficulty: question.difficulty,
+                isActive: question.isActive,
+            });
+
+        });
+
     }
+
+    console.log("==============================\n");
+
+    return questions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Number(limit));
+
+}
 
     /*
     ==========================================
